@@ -7,11 +7,11 @@ Languages: [English](./README.md) | [繁體中文](./README.zh-TW.md) | [简体�
 </p>
 
 <p align="center">
-  <strong>Codex skills for game-ready 2D sprites, layered maps, and engine-ready prototypes.</strong>
+  <strong>Agent-compatible skills for game-ready 2D sprites, layered maps, and engine-ready prototypes.</strong>
 </p>
 
 <p align="center">
-  Ask in natural language. Codex plans the asset pipeline, renders with built-in image generation, then local processors clean, split, validate, and export assets for Godot, Unity, or raw 2D game workflows.
+  Ask in natural language. Your agent plans the asset pipeline, renders through an OpenAI-compatible image generation endpoint such as new-api, then local processors clean, split, validate, and export assets for Godot, Unity, or raw 2D game workflows.
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@ Languages: [English](./README.md) | [繁體中文](./README.zh-TW.md) | [简体�
 
 ## What Makes It Different
 
-Agent Sprite Forge is not just a folder of prompts. It is a Codex-first 2D game asset workflow where the agent decides the plan, image generation creates the raw visuals, and deterministic scripts turn those visuals into reusable game assets.
+Agent Sprite Forge is not just a folder of prompts. It is an agent-compatible 2D game asset workflow where the agent decides the plan, an OpenAI-compatible image provider creates the raw visuals, and deterministic scripts turn those visuals into reusable game assets.
 
 <table>
   <tr>
@@ -51,7 +51,7 @@ Agent Sprite Forge is not just a folder of prompts. It is a Codex-first 2D game 
 
 ### Engine-Ready Prototypes
 
-These examples were assembled with Codex using `agent-sprite-forge` workflows. They are meant to show the full loop: generated assets, structured scene data, and playable prototype wiring.
+These examples were assembled with agentic `agent-sprite-forge` workflows. They are meant to show the full loop: generated assets, structured scene data, and playable prototype wiring.
 
 <table>
   <tr>
@@ -140,7 +140,7 @@ Godot prototype output includes:
 - Runtime build, upgrade, sell, projectile, and targeting behavior connected in Godot.
 
 ```text
-image_gen map + separated props + tower sheets + enemy animation sheets + HUD icons + Godot gameplay wiring
+imagegen manifest + separated props + tower sheets + enemy animation sheets + HUD icons + Godot gameplay wiring
 ```
 
 </details>
@@ -172,7 +172,7 @@ Unity prototype output includes:
 - WebGL build output under `Builds/WebGL` with Vercel deployment config.
 
 ```text
-image_gen map + directional hero sheets + summon/evolution sheets + enemy sheets + FX/HUD icons + Unity runtime + WebGL deploy
+imagegen manifest + directional hero sheets + summon/evolution sheets + enemy sheets + FX/HUD icons + Unity runtime + WebGL deploy
 ```
 
 </details>
@@ -340,7 +340,7 @@ layered_raster + y_sorted_props + precise_shapes + trigger_zones + raw_canvas
 Godot output includes editable `TileMapLayer` nodes, independent `Sprite2D` props, encounter grass `Area2D` zones, `StaticBody2D` collision blockers, exit `Area2D` zones, and a debug player/camera.
 
 ```text
-image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
+imagegen manifest + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
 ```
 
 ### Playable Game Prompt Examples
@@ -389,15 +389,15 @@ Use $generate2dsprite to create a 2D game similar to Pokemon. You only need to b
 
 `$generate2dmap` only uses `$generate2dsprite` when the selected map pipeline needs reusable transparent props. Small environmental props can be batched into `2x2`, `3x3`, or `4x4` prop packs, then extracted into individual transparent props. Simple maps can stay as a single baked image.
 
-When a visual reference is involved, both skills follow the same wrapper rule: make the image visible in the conversation first. Attached images and freshly generated images are already visible; local files should be opened with `view_image` before asking built-in image generation to preserve identity, style, map layout, or sprite lineage.
+The first adapter implementation is text-to-image only. When a visual reference is involved, both skills record the intended reference role in `imagegen-request.json` / run notes and translate preferred references into explicit text constraints. Provider-native reference/edit calls are capability-gated future work, so required identity/layout preservation must fail clearly instead of silently pretending the text-to-image endpoint used the image.
 
 ## How It Works
 
-1. The user asks Codex for a sprite, prop pack, map, or engine-ready prototype.
+1. The user asks an agent for a sprite, prop pack, map, or engine-ready prototype.
 2. The agent chooses the asset type, action, bundle shape, sheet layout, frame count, style, and alignment strategy.
-3. Built-in image generation creates the raw visual asset.
-4. Local scripts run deterministic post-processing: chroma-key cleanup, despill, frame extraction, alignment, prop-pack slicing, GIF/PNG export, and validation metadata.
-5. For maps and prototypes, Codex can also assemble placement metadata, collision, trigger zones, Godot scenes, or Unity project wiring.
+3. The agent writes `imagegen-request.json` and runs `agent-sprite-forge-imagegen generate` against an OpenAI-compatible `/v1/images/generations` endpoint.
+4. The adapter writes raw PNGs plus `imagegen-manifest.json`; existing local scripts then run deterministic post-processing: chroma-key cleanup, despill, frame extraction, alignment, prop-pack slicing, GIF/PNG export, and validation metadata.
+5. For maps and prototypes, the agent can also assemble placement metadata, collision, trigger zones, Godot scenes, or Unity project wiring.
 
 The script is not the creative brain. The agent makes the visual and pipeline decisions; the Python tools only perform repeatable pixel and export operations.
 
@@ -410,18 +410,18 @@ The script is not the creative brain. The agent makes the visual and pipeline de
 - Single baked maps, clean HD layered maps, prop-pack maps, and flattened previews
 - Collision and zone metadata for playable maps
 - Godot-ready editable maps with `TileMapLayer`, separate props, encounter grass, collision, exits, and debug player scenes
-- Prototype-scale Godot and Unity scenes when the user asks Codex to wire assets into an engine project
+- Prototype-scale Godot and Unity scenes when the user asks an agent to wire assets into an engine project
 
 ## Install
 
 ### Option 1: Windows PowerShell
 
-Clone the repo, install the local processor dependencies, then copy both skills into your Codex skills directory:
+Clone the repo, install the Python package and local processor dependencies, then copy both skills into your agent's skills directory. The examples below use Codex's default skill directory; use the equivalent directory for OpenCode, Claude Code, Gemini CLI, or another agent runtime.
 
 ```powershell
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd .\agent-sprite-forge
-python -m pip install -r .\requirements.txt
+python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
   ".\skills\*" `
@@ -433,12 +433,54 @@ Copy-Item -Recurse -Force `
 ```bash
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd ./agent-sprite-forge
-python3 -m pip install -r ./requirements.txt
+python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
 ```
 
-Start a new Codex session after installation so the skills are loaded cleanly.
+Start a new agent session after installation so the skills are loaded cleanly.
+
+## OpenAI-Compatible Image Provider
+
+Agent Sprite Forge uses one OpenAI-compatible endpoint for raw image generation. This works with new-api, One-API, LiteLLM-style gateways, or any provider that implements `/v1/images/generations`.
+
+1. Copy [`configs/imagegen.openai-compatible.example.json`](./configs/imagegen.openai-compatible.example.json) to your own config file.
+2. Set `base_url` to the gateway root, usually including `/v1`.
+3. Set `api_key_env` to the environment variable that stores your key.
+4. Export the key before a live run.
+
+```bash
+export NEW_API_KEY="sk-..."
+python -m agent_sprite_forge.imagegen generate \
+  --config configs/imagegen.openai-compatible.example.json \
+  --request examples/imagegen/sprite-2x2-idle.request.json \
+  --output-dir outputs/imagegen-smoke/sprite
+```
+
+Use `--dry-run` first to verify request loading, routing, and manifest writing without spending provider credits:
+
+```bash
+python -m agent_sprite_forge.imagegen generate \
+  --config configs/imagegen.openai-compatible.example.json \
+  --request examples/imagegen/map-side-scroll-16x9.request.json \
+  --output-dir outputs/imagegen-smoke/map \
+  --dry-run
+```
+
+Live smoke tests consume provider credits and are not part of the unit test suite.
+
+## Model Selection
+
+The adapter does not hardcode one model because sprites and maps need different aspect ratios. By default it uses Firefly image model IDs in the form `{family}-{resolution}-{ratio}` and records the selected model in `imagegen-manifest.json`.
+
+- Standard sprite sheets: `firefly-gpt-image-1k-1x1`
+- High-value hero or dense `4x4` sheets: `firefly-gpt-image-2k-1x1`
+- Compact prop packs: square `1x1` models
+- Side-scroll parallax layers and stage references: `16x9` models
+- Portrait/mobile scenes: `9x16` models
+- Wide platform strips, bridges, and long hazards: `4x1` or `8x1` through `firefly-nano-banana2`
+
+The default `size_mode` is `model_id`, so the adapter does not send a separate `size` field unless requested. This avoids conflicts when a gateway encodes resolution and ratio in the model name. Video model families such as Sora, Veo, or Kling are intentionally excluded; sprite GIFs are generated locally from sprite sheets.
 
 ## Python Requirements
 
@@ -447,7 +489,7 @@ The local post-processor depends on:
 - `Pillow`
 - `numpy`
 
-They are listed in [`requirements.txt`](./requirements.txt). Codex handles image generation itself, but these Python packages are still needed for magenta background removal, frame splitting, bounding-box extraction, alignment/rescaling, transparent GIF/PNG export, and prop-pack slicing.
+They are listed in [`requirements.txt`](./requirements.txt) and `pyproject.toml`. The imagegen adapter handles raw image requests, and these Python packages are still needed for magenta background removal, frame splitting, bounding-box extraction, alignment/rescaling, transparent GIF/PNG export, and prop-pack slicing.
 
 ## Repository Layout
 
@@ -459,6 +501,17 @@ agent-sprite-forge/
   README.ja.md
   README.ko.md
   requirements.txt
+  pyproject.toml
+  agent_sprite_forge/
+    imagegen/
+      cli.py
+      config.py
+      model_resolver.py
+      openai_compatible.py
+  configs/
+    imagegen.openai-compatible.example.json
+  examples/
+    imagegen/
   src/
   skills/
     generate2dmap/

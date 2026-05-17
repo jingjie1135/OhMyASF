@@ -7,11 +7,11 @@
 </p>
 
 <p align="center">
-  <strong>面向 Codex 的 2D 游戏资产技能：生成可用的角色精灵、分层地图，以及能交给游戏引擎继续编辑的原型素材。</strong>
+  <strong>面向通用 agent 的 2D 游戏资产技能：通过 OpenAI-compatible 生图端点生成可用角色精灵、分层地图和引擎原型素材。</strong>
 </p>
 
 <p align="center">
-  用自然语言描述需求，Codex 负责规划资产流程，用内置图像生成产出原始视觉，再用本地处理器去背、切格、对齐、验证，并导出给 Godot、Unity 或普通 2D 游戏项目使用。
+  用自然语言描述需求，agent 负责规划资产流程，通过 new-api / One-API / LiteLLM 风格的 OpenAI-compatible 图像接口产出原始视觉，再用本地处理器去背、切格、对齐、验证，并导出给 Godot、Unity 或普通 2D 游戏项目使用。
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ## 有什么不同
 
-Agent Sprite Forge 不是一组 prompt 模板。它是一套 Codex-first 的 2D 游戏资产工作流：agent 先判断需要什么资产、图像生成负责创作原始视觉，本地脚本只做可重复的清理、切割、对齐、验证和导出。
+Agent Sprite Forge 不是一组 prompt 模板。它是一套 agent-compatible 的 2D 游戏资产工作流：agent 先判断需要什么资产，OpenAI-compatible 生图 provider 负责创作原始视觉，本地脚本只做可重复的清理、切割、对齐、验证和导出。
 
 <table>
   <tr>
@@ -39,7 +39,7 @@ Agent Sprite Forge 不是一组 prompt 模板。它是一套 Codex-first 的 2D 
 
 ### Engine-Ready Prototypes
 
-这些案例使用 Codex 和 `agent-sprite-forge` 工作流组装，重点是完整闭环：生成资产、结构化场景数据，以及可玩的 prototype wiring。
+这些案例使用 agentic `agent-sprite-forge` 工作流组装，重点是完整闭环：生成资产、结构化场景数据，以及可玩的 prototype wiring。
 
 <table>
   <tr>
@@ -144,7 +144,7 @@ layered_raster + y_sorted_props + precise_shapes + trigger_zones + raw_canvas
 Godot 输出可以包含可编辑 `TileMapLayer` nodes、独立 `Sprite2D` props、遇怪草丛 `Area2D` zones、`StaticBody2D` collision blockers、exit `Area2D` zones，以及 debug player/camera。
 
 ```text
-image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
+imagegen manifest + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
 ```
 
 ## Included Skills
@@ -158,11 +158,11 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 
 ## How It Works
 
-1. 用户请 Codex 生成 sprite、prop pack、map 或 engine-ready prototype。
+1. 用户请 agent 生成 sprite、prop pack、map 或 engine-ready prototype。
 2. Agent 判断 asset type、action、bundle shape、sheet layout、frame count、style 和 alignment strategy。
-3. 内置图像生成产出 raw visual asset。
-4. 本地脚本做 deterministic post-processing：chroma-key cleanup、despill、frame extraction、alignment、prop-pack slicing、GIF/PNG export 和 validation metadata。
-5. 对地图和 prototype，Codex 也可以组装 placement metadata、collision、trigger zones、Godot scenes 或 Unity project wiring。
+3. Agent 写入 `imagegen-request.json`，运行 `agent-sprite-forge-imagegen generate` 调用 OpenAI-compatible `/v1/images/generations` 端点。
+4. Adapter 写出 raw PNG 和 `imagegen-manifest.json`；本地脚本再做 deterministic post-processing：chroma-key cleanup、despill、frame extraction、alignment、prop-pack slicing、GIF/PNG export 和 validation metadata。
+5. 对地图和 prototype，agent 也可以组装 placement metadata、collision、trigger zones、Godot scenes 或 Unity project wiring。
 
 脚本不是创意大脑。Agent 负责视觉和 pipeline 决策；Python 工具只做可重复的像素处理和导出。
 
@@ -173,7 +173,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 ```powershell
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd .\agent-sprite-forge
-python -m pip install -r .\requirements.txt
+python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
   ".\skills\*" `
@@ -185,12 +185,54 @@ Copy-Item -Recurse -Force `
 ```bash
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd ./agent-sprite-forge
-python3 -m pip install -r ./requirements.txt
+python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
 ```
 
-安装后请重开 Codex session，让 skills 被干净载入。
+安装后请重开 agent session，让 skills 被干净载入。
+
+## OpenAI-Compatible 生图配置
+
+Agent Sprite Forge 使用单一 OpenAI-compatible 端点生成 raw image，可接入 new-api、One-API、LiteLLM 风格网关，或任何实现 `/v1/images/generations` 的 provider。
+
+1. 复制 [`configs/imagegen.openai-compatible.example.json`](./configs/imagegen.openai-compatible.example.json) 为自己的配置。
+2. 将 `base_url` 改成网关地址，通常包含 `/v1`。
+3. 将 `api_key_env` 改成保存 API key 的环境变量名。
+4. live run 前导出对应 key。
+
+```bash
+export NEW_API_KEY="sk-..."
+python -m agent_sprite_forge.imagegen generate \
+  --config configs/imagegen.openai-compatible.example.json \
+  --request examples/imagegen/sprite-2x2-idle.request.json \
+  --output-dir outputs/imagegen-smoke/sprite
+```
+
+先用 `--dry-run` 验证 request、模型选择和 manifest 写入，不消耗 provider 额度：
+
+```bash
+python -m agent_sprite_forge.imagegen generate \
+  --config configs/imagegen.openai-compatible.example.json \
+  --request examples/imagegen/map-side-scroll-16x9.request.json \
+  --output-dir outputs/imagegen-smoke/map \
+  --dry-run
+```
+
+live smoke test 会消耗 provider 额度，不属于普通单元测试。
+
+## 模型选择
+
+Adapter 不固定单一模型，因为 sprite sheet 和地图需要不同宽高比。默认使用 `{family}-{resolution}-{ratio}` 形式的 Firefly 图片模型 ID，并把最终选择写入 `imagegen-manifest.json`。
+
+- 标准 sprite sheet：`firefly-gpt-image-1k-1x1`
+- 高价值主角或密集 `4x4` sheet：`firefly-gpt-image-2k-1x1`
+- compact prop pack：方形 `1x1` 模型
+- side-scroll parallax layer / stage reference：`16x9` 模型
+- portrait/mobile 场景：`9x16` 模型
+- 宽平台、桥、长条 hazard：通过 `firefly-nano-banana2` 走 `4x1` 或 `8x1`
+
+默认 `size_mode` 是 `model_id`，即不额外发送 `size`，避免网关模型名已经编码分辨率/比例时产生冲突。Sora、Veo、Kling 等视频模型不会进入当前图片 selector；GIF 仍由本地 sprite sheet 切帧生成。
 
 ## Suggested Prompts
 
