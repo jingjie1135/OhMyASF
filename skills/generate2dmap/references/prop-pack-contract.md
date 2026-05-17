@@ -2,7 +2,7 @@
 
 Prop packs batch multiple small static map props into one generated sheet, then extract each cell into a transparent prop PNG. Square prop packs are for compact props only, not for floors, platforms, bridges, walls, or other wide/collision-critical scene objects.
 
-Use prop packs to reduce repeated image-generation calls and prompt overhead. They trade per-prop control for speed, so use them only when the props can share one style, scale, perspective, and quality bar.
+Use prop packs to reduce repeated imagegen CLI calls and prompt overhead. They trade per-prop control for speed, so use them only when the props can share one style, scale, perspective, and quality bar.
 
 ## When To Use
 
@@ -65,7 +65,9 @@ python skills/generate2dsprite/scripts/make_layout_guide.py \
   --output assets/props/raw/<name>-layout-guide.png
 ```
 
-Make the guide visible before image generation. Tell the model to use it only for invisible slot count, spacing, centering, and safe padding. The output must not copy guide boxes, safe-area rectangles, center marks, labels, borders, or guide background.
+Encode the same slot/spacing constraints in text unless a future reference-capable adapter path is enabled. Tell the model to use the layout only for invisible slot count, spacing, centering, and safe padding. The output must not copy guide boxes, safe-area rectangles, center marks, labels, borders, or guide background.
+
+Compact `2x2`, `3x3`, and `4x4` prop packs should route to square `1x1` image models. Wide platform strips, bridges, and long hazards should not use square prop-pack routing; use a wide ratio such as `4x1` or `8x1` when the selected model family supports it.
 
 ```text
 Create exactly one <ROWS>x<COLS> prop sheet for a top-down 2D RPG map.
@@ -111,23 +113,21 @@ Use `1x4` only for non-actor platform strips when a slope, corner, broken varian
 Before extraction, run a chroma-key cleanup pass when the sheet has antialiased magenta fringe or when the props will be composited over a dark/detailed base. This is often better than direct hard-key extraction:
 
 ```bash
-python $CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py \
+python skills/generate2dsprite/scripts/generate2dsprite.py process \
   --input assets/props/raw/forest-props-sheet.png \
-  --out assets/props/raw/forest-props-sheet-alpha.png \
-  --key-color '#ff00ff' \
-  --soft-matte \
-  --transparent-threshold 35 \
-  --opaque-threshold 160 \
-  --despill \
-  --edge-contract 1 \
-  --force
+  --target asset \
+  --mode single \
+  --rows 3 \
+  --cols 3 \
+  --output-dir assets/props/raw/forest-props-clean \
+  --component-mode all
 ```
 
 Use `scripts/extract_prop_pack.py`:
 
 ```bash
 python skills/generate2dmap/scripts/extract_prop_pack.py \
-  --input assets/props/raw/forest-props-sheet-alpha.png \
+  --input assets/props/raw/forest-props-clean/raw-sheet-clean.png \
   --rows 3 \
   --cols 3 \
   --labels mossy-rock,shrub,fallen-log,small-lantern,wooden-sign,flower-patch,stump,crate,grass-tuft \

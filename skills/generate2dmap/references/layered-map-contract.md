@@ -43,7 +43,7 @@ Read [prop-pack-contract.md](prop-pack-contract.md) before batching props.
 For generated layered raster maps, use a dressed reference pass before final prop extraction:
 
 1. Generate the base as ground-only terrain.
-2. Make the base visible to built-in `image_gen`. If the base exists as a local file, call `view_image` first; do not expect a filesystem path in the prompt to work as the visual reference.
+2. In the first text-to-image adapter path, record the base path and intended role `base_map` in run notes, then write preserved camera/framing/dimensions/terrain details into the prompt. Provider-native image reference calls are future capability-gated work.
 3. Ask for a dressed-reference version of the same map by adding props only.
 4. Preserve exact camera, framing, dimensions, terrain, paths, water, anchor pads, collision-relevant boundaries, and map edges.
 5. Use the dressed reference to choose prop identities and placement coordinates, but compose the final runtime preview from the original base plus extracted transparent props.
@@ -53,7 +53,7 @@ The dressed reference is a planning artifact. Do not ship it as the only runtime
 Prompt shape:
 
 ```text
-Use the image just shown as the exact base map reference.
+Use the referenced base map as the exact base map reference.
 Create a dressed-reference version of the same map by adding props only.
 Preserve exactly: camera, framing, image size, terrain, paths, water, anchor pads, rocks, map boundaries, and all walkable routes.
 Do not crop, zoom, rotate, repaint, or redesign the terrain.
