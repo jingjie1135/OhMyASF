@@ -1,6 +1,6 @@
 ---
 name: generate2dmap
-description: "Generate and revise production-oriented 2D game maps with built-in image generation as the default visual asset source, choosing a visual model, runtime object model, collision model, art direction, and engine/export target. Use when Codex needs to create or integrate RPG maps, monster-taming maps, tactical arenas, battle backgrounds, side-scroller/parallax scenes, tilemaps, layered raster maps, clean HD hand-painted maps, pixel-inspired maps, prop packs, collision zones, walkable areas, or map previews."
+description: "Generate and revise production-oriented 2D game maps with the configured OpenAI-compatible imagegen CLI as the default visual asset source, choosing a visual model, runtime object model, collision model, art direction, and engine/export target. Use when an agent needs to create or integrate RPG maps, monster-taming maps, tactical arenas, battle backgrounds, side-scroller/parallax scenes, tilemaps, layered raster maps, clean HD hand-painted maps, pixel-inspired maps, prop packs, collision zones, walkable areas, or map previews."
 ---
 
 # Generate2dmap
@@ -51,27 +51,27 @@ When the user gives a genre instead of a technical map mode, choose the mode con
 
 ## Image Generation First
 
-This skill is image-generation-first for visual assets. Use built-in `image_gen` as the default creative art source for base maps, in-world reference mockups, dressed references, stage references, prop sheets, prop sprites, tileset art, parallax layers, battle backgrounds, and other visible map assets.
+This skill is image-generation-first for visual assets. Use `agent-sprite-forge-imagegen generate` as the default creative art source for base maps, in-world reference mockups, dressed references, stage references, prop sheets, prop sprites, tileset art, parallax layers, battle backgrounds, and other visible map assets.
 
 The agent must write the creative image prompts itself. Do not use scripts to generate creative prompts or to procedurally draw final visual art. Scripts may assemble, slice, chroma-key, crop, validate, compose previews, emit JSON metadata, and wire image-generated assets into engine-native files such as Godot `.tscn` scenes.
 
-Save every manually written image-generation prompt next to the generated asset as `<asset>.prompt.txt` or in an explicit manifest field. Do not leave accepted generated assets with empty prompt metadata when the run creates new visual assets.
+Save every manually written image-generation prompt next to the generated asset as `<asset>.prompt.txt` or keep it in the generated `imagegen-manifest.json`. Do not leave accepted generated assets with empty prompt metadata when the run creates new visual assets.
 
 Only use procedural drawing or scripted placeholder art when the user explicitly asks for placeholders, test fixtures, debug maps, or engine scaffolding without final art. If using an engine target such as `Godot_TileMap`, generate or reuse the visual tileset art first, then use scripts/code only to build tile layers, collision, zones, and scene wiring.
 
 ## Visual Reference Handoff
 
-When generating an in-world reference mockup from an existing generated base/background, the prior image must be treated as an active visual reference, not just a file path or loose style hint:
+When generating an in-world reference mockup from an existing generated base/background, treat the prior image as an explicit adapter reference, not just a loose style hint:
 
-1. Save the base/background image first.
-2. Immediately before the next `image_gen` call, make that exact image visible in conversation context. If it is a local file, call `view_image` on the saved file.
-3. In the next `image_gen` prompt, explicitly say to use the visible image immediately above as the visual reference.
-4. Describe concrete features from the viewed image that must be preserved, such as camera framing, horizon, road or water shapes, terrain boundaries, entrance/exit direction, major silhouettes, empty pads, and landmark positions.
+1. Save the base/background image first and keep its `imagegen-manifest.json`.
+2. In the first text-to-image adapter path, record the intended reference role (`base_map`, `stage_background`, or `style_reference`) in `imagegen-request.json` / run notes and describe concrete preserved features in the prompt.
+3. Required provider-native reference preservation must fail clearly before generation rather than silently ignoring the reference. Capability-gated reference/edit calls are future work.
+4. Describe concrete features that must be preserved, such as camera framing, horizon, road or water shapes, terrain boundaries, entrance/exit direction, major silhouettes, empty pads, and landmark positions.
 5. Generate an in-world reference mockup, not an annotated diagram. Do not draw circles, arrows, outlines, labels, numbers, UI callouts, text, captions, legends, highlighted boxes, highlighted zones, measurement lines, or explanatory overlays.
 6. Render proposed visible gameplay objects as natural game-world objects or subtle in-world blockout geometry. Do not draw non-visual metadata such as spawn points, triggers, camera bounds, or patrol hints; write those later as structured scene-hook metadata.
 7. Keep reference mockups sparse enough to drive final asset production. Unless the user explicitly asks for a dense concept sheet, include at most 9 distinct visible runtime prop/object candidates in the mockup. Repeated instances of the same platform, lamp, crate, hazard, pickup, or gate count as one candidate and can be repeated later in placement metadata.
 
-Do not rely on a path string, filename, or generic wording like "based on the map" as the reference handoff. If the base/background is not visible in context, stop and make it visible before generating the dressed reference or stage reference.
+Do not rely on a path string, filename, or generic wording like "based on the map" as the reference handoff. Either pass the file through the adapter reference mechanism or turn the required preserved features into explicit text constraints and record the limitation.
 
 ## Layer Separation Contract
 
@@ -101,14 +101,14 @@ User-facing parameters may be stated in natural language:
 - `stage_canvas`: exact pixel dimensions and aspect ratio for side-scroll/parallax layers, references, and previews
 - `perspective`: top-down | 3/4 top-down | side-view | isometric-like
 - `art_style`: clean_hd | pixel_inspired | retro_pixel | hand_painted | project-native
-- `visual_asset_source`: image_gen | existing_assets | procedural_placeholder
+- `visual_asset_source`: imagegen_cli | existing_assets | procedural_placeholder
 - `collision_precision`: none | coarse | precise | tile | walkmesh
 - `prop_generation`: none | one_by_one | prop_pack_2x2 | prop_pack_3x3 | prop_pack_4x4 | platform_strip_1x3 | platform_strip_1x4 | custom_wide_pack
 - `output_format`: PNG only | layered preview | manifest JSON | engine-native map data
 
 When unspecified:
 
-- Use `image_gen` as the visual asset source.
+- Use `imagegen_cli` as the visual asset source.
 - Infer `map_mode` from genre and editing needs before selecting lower-level axes.
 - Use `tile_mode` for Pokemon-like, top-down RPG, monster-taming, editor/grid-perfect, or tilemap requests.
 - Use `scene_mode` for tower defense, survivors-like, cozy/top-down showcase maps, and base-map-plus-props requests.
@@ -139,18 +139,18 @@ When unspecified:
    - If the request is for a playable map, stage, level, room, prototype, or game scene, choose a pipeline with explicit runtime objects. Do not downgrade to `baked_raster` unless the user asked for a background-only image.
    - If the request implies a playable side-view scrolling/action stage, such as a side-scroller, platformer, runner, shooter, brawler, scrolling combat stage, Megaman-like stage, Castlevania-like stage, or Contra-like stage, lock the map pipeline to `parallax_layers + platform_objects + interactive_scene_objects + scene_hooks + precise_shapes` unless the engine already requires a tilemap.
    - Select `art_style`. Prefer readable gameplay shapes over decorative texture density.
-   - Select `visual_asset_source`. Default to `image_gen`; use `existing_assets` only when the project already has suitable art; use `procedural_placeholder` only when explicitly requested.
+   - Select `visual_asset_source`. Default to `imagegen_cli`; use `existing_assets` only when the project already has suitable art; use `procedural_placeholder` only when explicitly requested.
    - Treat `hybrid` as a result of combining axes, not as a primary category.
 
 3. Produce assets.
-   - Write the creative prompts manually and use built-in `image_gen` for visible map art unless the user explicitly chose existing assets or procedural placeholders.
-   - For baked raster maps, generate one background with built-in `image_gen`, or edit/use an existing image when supplied, then add optional collision/zones metadata.
+   - Write the creative prompts manually and use the imagegen CLI for visible map art unless the user explicitly chose existing assets or procedural placeholders. Each raw generated image should have a request file and an `imagegen-manifest.json`.
+   - For baked raster maps, generate one background with the imagegen CLI, or edit/use an existing image when supplied, then add optional collision/zones metadata.
    - For playable or editable layered maps, generate a foundation-only base/background first. The base must not contain runtime-controlled props, interactables, hazards, doors, gates, pickups, actors, or foreground occluders. If it does, regenerate or demote it to a reference artifact.
    - For layered raster maps, generate a ground-only/foundation-only base map first. Then perform the visual reference handoff and generate an in-world dressed reference mockup from the visible base before making final props and placements.
    - For tilemaps, generate or reuse tileset art first, then follow the engine/editor format for layers, objects, collision, and scene files. Do not script-draw the tileset as the final art source, and do not flatten object layers into a single runtime image.
    - For `grid_mode`, generate or reuse grid/tileset visual art first, then write cell metadata such as walkable/buildable flags, move cost, terrain effects, resource nodes, and object layers.
    - For `room_chunk_mode`, define chunk dimensions, exits, connection sockets, collision contract, and spawn/trigger metadata before final art assembly. Chunks must be reusable and validated at their seams.
-   - For playable side-view scrolling/action stages, define the canonical `stage_canvas` before generating art. Generate named scenery-only parallax layers first: `sky`, `far_bg`, `mid_bg`, `near_bg`, and optional `foreground_overlay`. Every primary parallax layer must use the same pixel dimensions, aspect ratio, camera framing, horizon line, and top-left anchor as the `stage_canvas`; do not accept mismatched image sizes that require guesswork to stack. Do not treat one full-width background image as a complete `side_scroll_mode` background stack unless the user explicitly asks for a flat/non-parallax background. These parallax passes must not contain playable foreground platforms, walkable floors, terrain chunks, hazards, pickups, doors, gates, checkpoints, crates, fences, spikes, or other runtime objects. Then perform the visual reference handoff and generate an in-world stage reference mockup that visually places up to 9 distinct intended platform/object candidates before generating final separate scene objects and metadata.
+   - For playable side-view scrolling/action stages, define the canonical `stage_canvas` before generating art and route requests to a `16x9` model unless the project camera dictates another aspect. Generate named scenery-only parallax layers first: `sky`, `far_bg`, `mid_bg`, `near_bg`, and optional `foreground_overlay`. Every primary parallax layer must use the same pixel dimensions, aspect ratio, camera framing, horizon line, and top-left anchor as the `stage_canvas`; do not accept mismatched image sizes that require guesswork to stack. Do not treat one full-width background image as a complete `side_scroll_mode` background stack unless the user explicitly asks for a flat/non-parallax background. These parallax passes must not contain playable foreground platforms, walkable floors, terrain chunks, hazards, pickups, doors, gates, checkpoints, crates, fences, spikes, or other runtime objects. Then perform the visual reference handoff and generate an in-world stage reference mockup that visually places up to 9 distinct intended platform/object candidates before generating final separate scene objects and metadata.
    - If a side-view background already contains collidable-looking foreground geometry, walkable floors, or reusable gameplay props, reject it as a runtime background and regenerate a cleaner scenery-only background before continuing.
    - Treat the reference mockup as a checkpoint, not a deliverable. Do not stop after generating it. After the relevant `dressed-reference` or `stage-reference` exists, inspect it and continue into the post-reference object production gate.
    - Do not present a rerunnable script that creates the whole art pack as the main solution unless the user asked for procedural placeholder art.
@@ -204,11 +204,11 @@ Prop packs save image-generation calls and prompt overhead, but reduce per-prop 
 For layered maps with generated props, prefer this in-world reference mockup pipeline:
 
 1. Generate `assets/map/<name>-base.png` as ground-only terrain.
-2. Make the base image visible in conversation context. If the base is a local file, use `view_image` immediately before calling built-in `image_gen`; do not rely on a path string as the reference.
-3. In the dressed-reference prompt, explicitly say: use the visible base image immediately above as the visual reference, preserve its camera/framing/dimensions/terrain/road/water/boundaries, and generate an in-world dressed reference mockup.
+2. Record the base image path and intended role `base_map` in the run notes, then write the preserved camera/framing/dimensions/terrain/road/water/boundaries into the prompt. Do not imply a text-to-image provider consumed the image as pixels.
+3. In the dressed-reference prompt, explicitly say to preserve the base map camera, framing, dimensions, terrain, roads, water, boundaries, and landmarks while generating an in-world dressed reference mockup.
 4. The dressed reference must show proposed props as natural game-world objects placed on the base. It must not contain circles, arrows, outlines, labels, text, callouts, legends, highlighted boxes, or other annotation graphics.
 5. The dressed reference should contain at most 9 distinct visible prop/object candidates unless the user explicitly asks for more. Prefer the objects that will become final generated props, collision blockers, interactables, or occluders.
-6. Generate `assets/map/<name>-dressed-reference.png` from the visible base. Treat this as a reference mockup, not the final runtime map.
+6. Generate `assets/map/<name>-dressed-reference.png` through the imagegen CLI from the base-reference request. Treat this as a reference mockup, not the final runtime map.
 7. Generate one-by-one props or a prop pack based on the dressed reference.
 8. Place extracted props over the original base and compose a flattened preview.
 9. Validate that base, dressed reference, and preview dimensions match.
@@ -219,18 +219,18 @@ Use `scripts/extract_prop_pack.py` after generating a solid-magenta prop sheet. 
 
 An in-world reference mockup is never the final deliverable by itself. After generating `dressed-reference` or `stage-reference`, continue with:
 
-1. Make both images visible in conversation context before any object/prop generation:
+1. Record both prior images before any object/prop generation:
    - the original `base` or `background`
    - the generated `dressed-reference` or `stage-reference` mockup
-2. If either image is a local file, call `view_image` on it immediately before writing object lists or object/prop image prompts. Do not rely on file paths alone.
+2. Use those paths as adapter references when supported, or extract their concrete visual features into text constraints when references are unsupported. Do not rely on filenames alone.
 3. Create a concrete object list from the visible reference mockup while cross-checking the original base/background: object id, type, approximate position, approximate size, render layer, collision role, and asset strategy.
    - If the reference contains more than 9 distinct visible runtime object candidates, reduce the generated asset list to the 9 most gameplay-relevant candidates first, then represent extra repeats or low-value decorations through placement metadata or a later asset pass.
    - Classify every object before generation. Compact decorative props may be batched; wide/long, tall/large, collision-bearing, and tileset/strip objects must use one-by-one, strip, custom wide pack, tile/object-layer, or engine-native strategies.
 4. For each visible runtime object, choose exactly one asset strategy:
-   - generate a separate transparent asset with `$generate2dsprite` or direct `image_gen`
+   - generate a separate transparent asset with `$generate2dsprite` or the imagegen CLI
    - extract it from a generated prop/object pack
    - represent it as a tile/object layer if the engine/editor pipeline is tile-based
-5. For every object/prop image prompt, explicitly state that the visible original base/background and visible reference mockup above are the visual context. The generated asset must match the original map style and correspond to an object visible in the reference mockup.
+5. For every object/prop image prompt, explicitly state the original base/background and reference mockup context. The generated asset must match the original map style and correspond to an object visible in the reference mockup.
 6. Generate or define the final platforms, terrain chunks, props, hazards, pickups, doors, gates, checkpoints, exits, foreground occluders, and other visible scene objects. Do not skip this step just because the reference mockup already contains them visually.
 7. Write placement metadata such as `data/<name>-props.json`, `data/<name>-objects.json`, engine-native object layers, or tile/object data.
 8. Write collision, zones, scene hooks, camera bounds, and exits as structured metadata.
@@ -252,8 +252,8 @@ For playable side-view scrolling/action maps, an in-world stage reference mockup
    - Repeatable strips and foreground/object sprites may have different source dimensions, but they must declare display size, anchor point, repeat axis, and scale in metadata. They are not substitutes for the primary parallax plates.
    - It must not contain walkable floors, platform tops, terrain chunks, spike traps, pickups, crates, doors, gates, checkpoints, ladders, near fences, near stone walls, enemies, player characters, UI, labels, or any object that should later be edited, collided with, reused, or layered independently.
    - Keep the playable foreground lane visually open or neutral so separate platform/object layers can stack clearly over it.
-2. Make the background visible in conversation context. If it is a local file, use `view_image` immediately before calling built-in `image_gen`; do not rely on a path string as the reference.
-3. In the stage-reference prompt, explicitly say: use the visible background image immediately above as the visual reference, preserve exact camera/framing/dimensions/horizon/depth/entrances/exit direction, and generate an in-world stage reference mockup.
+2. Record the background image path and intended role `stage_background` in the run notes, then describe the exact camera/framing/dimensions/horizon/depth/entrances/exit direction in the prompt. Do not imply a text-to-image provider consumed the image as pixels.
+3. In the stage-reference prompt, explicitly preserve exact camera, framing, dimensions, horizon, depth, entrances, and exit direction while generating an in-world stage reference mockup.
 4. Generate `assets/map/<name>-stage-reference.png` from the visible background.
 5. In the stage reference, visually place the intended scene layout as natural game-world objects or subtle blockout geometry: platforms or walkable lanes, terrain chunks, foreground occluders, hazards, pickups, doors, checkpoints, gates, and exits.
    - Use at most 9 distinct visible runtime object candidates in the stage reference unless the user explicitly asks for a larger object pass. Repeated placements of the same platform, terrain chunk, hazard, pickup, checkpoint, door, gate, or occluder count as one candidate and should be repeated later in metadata.
