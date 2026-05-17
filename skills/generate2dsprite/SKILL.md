@@ -1,6 +1,6 @@
 ---
 name: generate2dsprite
-description: "Generate and postprocess general 2D game assets and animation sheets: pixel-art sprites, clean HD map props, creatures, characters, NPCs, spells, projectiles, impacts, props, summons, and transparent GIF exports. Use when Codex should infer the asset plan from a natural-language request, match a reference or map art style, call built-in `image_gen` for solid-magenta raw sheets, and use the local processor only for chroma-key cleanup, frame extraction, alignment, QC, and transparent exports."
+description: "Generate and postprocess general 2D game assets and animation sheets: pixel-art sprites, clean HD map props, creatures, characters, NPCs, spells, projectiles, impacts, props, summons, and transparent GIF exports. Use when an agent should infer the asset plan from a natural-language request, match a reference or map art style, create solid-magenta raw sheets through the configured OpenAI-compatible imagegen CLI, and use the local processor only for chroma-key cleanup, frame extraction, alignment, QC, and transparent exports."
 ---
 
 # Generate2dsprite
@@ -39,9 +39,9 @@ Read [references/modes.md](references/modes.md) when the request is ambiguous.
 - For controllable heroes, main characters, and high-value player body actions, default attack/shoot/cast body sheets to body-only. Do not include large slash arcs, muzzle flashes, projectiles, impact bursts, detached dust, long trails, or wide detached FX in the body sheet. Generate those as separate `fx`, `projectile`, or `impact` sheets and layer them in the game.
 - Only include wide attack FX in the same raw body sheet when the target runtime explicitly supports wider per-action cells plus per-action origin/anchor metadata. Otherwise, a wide FX bbox will force the body to shrink inside the fixed cell.
 - Write the art prompt yourself. Do not default to the prompt-builder script.
-- Use built-in `image_gen` for every raw image.
-- Do not create raw sprite art with Three.js, Canvas, SVG, HTML/CSS drawing, PIL shape drawing, procedural geometry, placeholder primitives, or code-rendered screenshots. Runtime code may display finished generated assets, and scripts may make layout guides or postprocess generated images, but requested sprite art must originate from built-in `image_gen`.
-- When the user provides or implies a visual reference, use built-in image edit/reference semantics only after the reference image is visible in the conversation context. If the reference is a local file, call `view_image` first; do not rely on a filesystem path in the prompt as the visual reference.
+- Use `agent-sprite-forge-imagegen generate` for every raw image unless the user explicitly selects existing art or procedural placeholders. The raw image path must come from `imagegen-manifest.json`.
+- Do not create raw sprite art with Three.js, Canvas, SVG, HTML/CSS drawing, PIL shape drawing, procedural geometry, placeholder primitives, or code-rendered screenshots. Runtime code may display finished generated assets, and scripts may make layout guides or postprocess generated images, but requested sprite art must originate from the configured image generation provider through the imagegen CLI.
+- The first adapter path is text-to-image only. When the user provides or implies a visual reference, record the intended role (`identity_style`, `layout_only`, or `map_style`) in `imagegen-request.json` / run notes, translate preferred references into explicit text constraints, and fail clearly before generation if the request requires provider-native reference preservation.
 - Do not force pixel art when the asset is a map prop for `$generate2dmap` or when the user/project requests a different style. Match the map or reference style first.
 - Use the script only as a deterministic processor: magenta cleanup, frame splitting, component filtering, scaling, alignment, QC metadata, transparent sheet export, and GIF export.
 - Do not use scripts to generate the creative image prompt. If a legacy prompt-builder command exists, treat it as historical compatibility only, not the normal skill workflow.
@@ -99,8 +99,8 @@ Choose `art_style` before writing the prompt:
 
 If a reference is involved:
 
-- Make the reference visible first. For local paths, use `view_image`; for freshly generated references, rely on the image already shown in context.
-- State the reference role explicitly: preserve identity/style, create an animation sheet for the same subject, create an evolution/variant, or derive a matching prop/FX.
+- Record the intended reference role in `imagegen-request.json` / run notes. Use `identity_style` to preserve a character, `layout_only` for guides, and `map_style` when matching map props.
+- State the reference intent explicitly in the prompt: preserve identity/style, create an animation sheet for the same subject, create an evolution/variant, or derive a matching prop/FX.
 - Preserve the stable identity markers from the reference: silhouette, palette, face/eye features, costume marks, major accessories, and material language.
 - Let only the requested action or evolution change. Do not redesign the subject unless the user asks.
 - Still require exact sheet shape, solid magenta background, frame containment, and same scale across frames.
@@ -115,8 +115,8 @@ Keep the strict parts:
 
 Mixed-action atlas guardrail:
 
-- Do not ask `image_gen` to generate unrelated action rows in one raw sheet, such as `row 1 idle, row 2 run, row 3 shoot, row 4 jump`, for a controllable hero or main character.
-- Do not ask `image_gen` to generate raw single-row action strips such as `1x4 idle`, `1x4 run`, `1x4 shoot`, or `1x4 jump` for a controllable hero, character, creature, NPC, enemy, summon, or animated prop.
+- Do not ask the imagegen provider to generate unrelated action rows in one raw sheet, such as `row 1 idle, row 2 run, row 3 shoot, row 4 jump`, for a controllable hero or main character.
+- Do not ask the imagegen provider to generate raw single-row action strips such as `1x4 idle`, `1x4 run`, `1x4 shoot`, or `1x4 jump` for a controllable hero, character, creature, NPC, enemy, summon, or animated prop.
 - If an engine needs a combined `4x4`, `5x5`, custom atlas, or row-strip delivery format, generate the action grids separately, process and QC them separately, then assemble the delivery atlas deterministically.
 - Exceptions are canonical directional locomotion sheets, one continuous long action sequence, prop packs, tileset-like atlases, and low-stakes compact enemy combat sheets. These still need one coherent prompt and visual QC.
 - Keep projectile, muzzle flash, impact, dust trails, and detached FX in separate sheets unless they are intentionally part of the same action silhouette and remain tightly attached.
@@ -142,7 +142,7 @@ Map prop pack guardrail:
 - Use custom wide cells for multiple similar wide objects. The grid must state explicit non-square cell dimensions and must not mix compact props with platform/terrain objects.
 - If a square prop pack fails due to edge touch or bad cropping, do not solve it by relaxing QC. Reclassify the object and regenerate with a more suitable sheet shape.
 
-If a layout guide is useful, generate one before calling built-in `image_gen`:
+If a layout guide is useful, generate one before running the imagegen CLI:
 
 ```bash
 python scripts/make_layout_guide.py \
@@ -153,7 +153,7 @@ python scripts/make_layout_guide.py \
   --output <run-dir>/references/<rows>x<cols>-layout-guide.png
 ```
 
-Then make the guide visible in the conversation context and tell `image_gen` to use it only for invisible slot count, spacing, centering, and safe padding. The output must not reproduce guide boxes, safe-area rectangles, center marks, labels, borders, or guide background.
+Then describe the guide constraints textually unless a future reference-capable adapter path is enabled. The output must not reproduce guide boxes, safe-area rectangles, center marks, labels, borders, or guide background.
 
 Use layout guides deliberately:
 
@@ -163,15 +163,31 @@ Use layout guides deliberately:
 
 ### 3. Generate the raw image
 
-Use built-in `image_gen`.
+Write an `imagegen-request.json` in the run directory and run the configured OpenAI-compatible adapter:
+
+```bash
+agent-sprite-forge-imagegen generate \
+  --config <repo-or-user-config>/imagegen.openai-compatible.json \
+  --request <run-dir>/imagegen-request.json \
+  --output-dir <run-dir>/raw
+```
+
+For dry-run validation before spending provider credits, add `--dry-run` and inspect the selected model in `<run-dir>/raw/imagegen-manifest.json`.
+
+Request guidance:
+
+- Use `asset_role: "sprite_sheet"` for standard action grids and `asset_role: "player_sheet"` for dense `4x4` four-direction player sheets.
+- Keep sprite sheets and compact prop packs on square models (`1x1`) by default. Use higher quality/resolution for high-value heroes, dense `3x3` or `4x4` sheets, and final assets.
+- Set `output_name` to a stable slug such as `raw-sheet`, `idle-raw`, or `player-sheet-raw`.
+- Put prompt, negative prompt, optional reference descriptors, and any provider-specific options in the request file rather than relying on conversation-only state.
 
 Do not use Three.js, Canvas, SVG, HTML/CSS, PIL drawing, or other code-generated art as the raw sprite source. These are acceptable only for runtime display, debug overlays, deterministic layout guides, or postprocessing already-generated images.
 
 After generation:
 
-- find the raw PNG under `$CODEX_HOME/generated_images/...`
-- copy or reference it from the working output folder
-- keep the original generated image in place
+- read `<run-dir>/raw/imagegen-manifest.json`
+- use the first `outputs[].path` entry as the raw PNG for postprocessing
+- keep the manifest with the run so the provider, selected model, prompt, dimensions, and hashes remain auditable
 
 ### 4. Postprocess locally
 

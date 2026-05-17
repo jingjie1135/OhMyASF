@@ -18,7 +18,7 @@ Always keep these constraints:
 - no borders or frames between cells
 - same asset identity across frames
 - same bounding box and same pixel scale across frames
-- raw sprite art must come from built-in `image_gen`, not Three.js, Canvas, SVG, HTML/CSS drawing, PIL shape drawing, procedural geometry, placeholder primitives, or code-rendered screenshots
+- raw sprite art must come from the configured imagegen CLI/provider, not Three.js, Canvas, SVG, HTML/CSS drawing, PIL shape drawing, procedural geometry, placeholder primitives, or code-rendered screenshots
 
 ## Style Rules
 
@@ -36,8 +36,8 @@ Do not write `16-bit`, `retro JRPG`, or `chunky pixel-art` unless the user asks 
 
 Use these rules when the user attaches a reference, points to a local image, asks for consistency with an earlier generated image, or asks for an evolution/variant of an existing sprite:
 
-- Make the reference image visible to built-in `image_gen` before generation. If the reference is a local file, call `view_image` first; do not assume a path string is a visual input.
-- In the prompt, say `use the image just shown as the visual reference`.
+- The first adapter path is text-to-image only. Record the intended reference role in `imagegen-request.json` / run notes, convert preferred references into explicit text constraints, and fail clearly before generation when exact reference matching is required.
+- In the prompt, state the reference role, such as `identity_style`, `layout_only`, `map_style`, or `base_map`.
 - State what must stay fixed: silhouette family, palette, face/eyes, costume or markings, accessories, material language, and art style.
 - State what may change: pose, animation phase, action energy, size progression, evolution traits, or FX intensity.
 - For animation sheets, preserve the same character identity in every cell and only change the animation pose or effect state.
@@ -52,10 +52,10 @@ Use a layout guide when the sheet needs stronger geometric control than text alo
 - possible fit: `3x3` large idles or showcase loops when earlier generations drift in scale, spacing, or edge safety
 - risky fit: four-direction walk sheets, because guide pressure can make directional poses too centered and reduce locomotion clarity
 
-When using a layout guide, make the guide image visible first and write:
+When using a layout guide, describe the layout constraints textually unless a future reference-capable adapter path is enabled:
 
 ```text
-Use the layout guide image just shown as a layout-only reference. Use it only to understand the rows, columns, equal invisible frame slots, centering, spacing, and safe padding. Do not reproduce the guide: no visible boxes, no safe-area rectangles, no center marks, no labels, no borders, no guide background.
+Use the layout guide only to understand the rows, columns, equal invisible frame slots, centering, spacing, and safe padding. Do not reproduce the guide: no visible boxes, no safe-area rectangles, no center marks, no labels, no borders, no guide background.
 ```
 
 Keep the creative prompt agent-written. The layout guide only provides geometry; it must not replace the action plan, art style, identity lock, or containment rules.
