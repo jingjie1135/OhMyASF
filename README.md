@@ -1,49 +1,37 @@
 # Agent Sprite Forge
 
-Languages: [English](./README.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
+语言：[English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 <p align="center">
   <img src="./src/banner.png" alt="Agent Sprite Forge banner" width="900" />
 </p>
 
 <p align="center">
-  <strong>Agent-compatible skills for game-ready 2D sprites, layered maps, and engine-ready prototypes.</strong>
+  <strong>面向通用 agent 的 2D 游戏资产技能：通过 OpenAI-compatible 生图端点生成可用角色精灵、分层地图和引擎原型素材。</strong>
 </p>
 
 <p align="center">
-  Ask in natural language. Your agent plans the asset pipeline, renders through an OpenAI-compatible image generation endpoint such as new-api, then local processors clean, split, validate, and export assets for Godot, Unity, or raw 2D game workflows.
+  用自然语言描述需求，agent 负责规划资产流程，通过 new-api / One-API / LiteLLM 风格的 OpenAI-compatible 图像接口产出原始视觉，再用本地处理器去背、切格、对齐、验证，并导出给 Godot、Unity 或普通 2D 游戏项目使用。
 </p>
 
 <p align="center">
-  <a href="#showcase">Showcase</a> ·
-  <a href="#included-skills">Skills</a> ·
-  <a href="#install">Install</a> ·
-  <a href="#suggested-prompts">Prompts</a> ·
+  <a href="#showcase">Showcase</a> |
+  <a href="#included-skills">Skills</a> |
+  <a href="#install">安装</a> |
+  <a href="#使用方法">使用</a> |
   <a href="#star-history">Star History</a>
 </p>
 
-## What Makes It Different
+## 有什么不同
 
-Agent Sprite Forge is not just a folder of prompts. It is an agent-compatible 2D game asset workflow where the agent decides the plan, an OpenAI-compatible image provider creates the raw visuals, and deterministic scripts turn those visuals into reusable game assets.
+Agent Sprite Forge 不是一组 prompt 模板。它是一套 agent-compatible 的 2D 游戏资产工作流：agent 先判断需要什么资产，OpenAI-compatible 生图 provider 负责创作原始视觉，本地脚本只做可重复的清理、切割、对齐、验证和导出。
 
 <table>
   <tr>
-    <td width="25%">
-      <strong>Sprite sheets</strong><br />
-      Characters, monsters, props, attacks, spells, projectiles, impacts, idles, walks, and reference-guided variants.
-    </td>
-    <td width="25%">
-      <strong>Layered maps</strong><br />
-      Ground-only bases, dressed references, prop packs, transparent props, y-sort placement, collision, zones, and previews.
-    </td>
-    <td width="25%">
-      <strong>Engine handoff</strong><br />
-      Godot scenes, editable TileMap layers, separated props, encounter grass, collision bodies, exits, and debug players.
-    </td>
-    <td width="25%">
-      <strong>Local cleanup</strong><br />
-      Chroma-key removal, frame extraction, alignment, transparent PNG/GIF export, prop-pack slicing, and QA metadata.
-    </td>
+    <td width="25%"><strong>精灵表</strong><br />角色、怪物、NPC、道具、攻击、法术、投射物、命中特效、idle、walk，以及参考图驱动的变体。</td>
+    <td width="25%"><strong>分层地图</strong><br />ground-only base、dressed reference、prop pack、透明 props、y-sort 摆放、碰撞、区域和预览图。</td>
+    <td width="25%"><strong>引擎交付</strong><br />Godot 场景、可编辑 TileMapLayer、分离式 props、遇怪草丛、碰撞体、出口和 debug player。</td>
+    <td width="25%"><strong>本地清理</strong><br />洋红去背、frame extraction、alignment、透明 PNG/GIF 导出、prop pack 切割和 QA metadata。</td>
   </tr>
 </table>
 
@@ -51,50 +39,50 @@ Agent Sprite Forge is not just a folder of prompts. It is an agent-compatible 2D
 
 ### Engine-Ready Prototypes
 
-These examples were assembled with agentic `agent-sprite-forge` workflows. They are meant to show the full loop: generated assets, structured scene data, and playable prototype wiring.
+这些案例使用 agentic `agent-sprite-forge` 工作流组装，重点是完整闭环：生成资产、结构化场景数据，以及可玩的 prototype wiring。
 
 <table>
   <tr>
     <td align="center" width="50%">
       <img src="./src/summon-survivors-game-preview1.png" alt="Summon Survivors Unity WebGL gameplay" width="420" />
       <br />
-      <strong>Summon Survivors — Unity WebGL</strong>
+      <strong>Summon Survivors - Unity WebGL</strong>
       <br />
-      Generated map art, hero sheets, summons, evolutions, enemies, bosses, pickups, HUD, FX, level-up choices, and WebGL deployment.
+      生成地图、主角 sheet、召唤物、进化、敌人、Boss、拾取物、HUD、FX、升级选项和 WebGL 部署。
       <br />
-      <a href="https://summon-survivors.vercel.app/">Play build</a> · <a href="https://drive.google.com/file/d/1TL7qRX95przTToZILVQ1EFwEXm3flB6t/view?usp=sharing">Build conversation</a>
+      <a href="https://summon-survivors.vercel.app/">Play build</a> | <a href="https://drive.google.com/file/d/1TL7qRX95przTToZILVQ1EFwEXm3flB6t/view?usp=sharing">Build conversation</a>
     </td>
     <td align="center" width="50%">
       <img src="./src/kingdomrush-forest-pass.png" alt="Forest Pass Defense Godot tower-defense map" width="420" />
       <br />
-      <strong>Forest Pass Defense — Godot Tower Defense</strong>
+      <strong>Forest Pass Defense - Godot Tower Defense</strong>
       <br />
-      A Godot 4 prototype with map, separated props, tower slots, towers, enemy sheets, boss/flying enemies, waves, HUD, build/upgrade/sell flow, projectiles, and targeting rules.
+      Godot 4 塔防原型，包含地图、分离式 props、塔位、塔、敌人 sheet、Boss、飞行敌、波次、HUD、建造 / 升级 / 出售流程和投射物规则。
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <img src="./src/godot-editor.png" alt="Generate2DMap Godot editor scene" width="420" />
       <br />
-      <strong>Editable RPG Map — Godot TileMap</strong>
+      <strong>Editable RPG Map - Godot TileMap</strong>
       <br />
-      Image-generated tileset and prop sheet wired into editable <code>TileMapLayer</code>, <code>Sprite2D</code> props, encounter grass <code>Area2D</code>, <code>StaticBody2D</code> collision, exits, metadata, and debug player/camera.
+      图像生成 tileset 和 prop sheet，再接进可编辑 <code>TileMapLayer</code>、<code>Sprite2D</code> props、遇怪草丛 <code>Area2D</code>、<code>StaticBody2D</code> 碰撞、出口、metadata 和 debug player/camera。
     </td>
     <td align="center" width="50%">
       <img src="./src/neon-breach.png" alt="Neon Breach cyberpunk side-scroller" width="420" />
       <br />
-      <strong>Neon Breach — Cyberpunk Side-Scroller</strong>
+      <strong>Neon Breach - Cyberpunk Side-Scroller</strong>
       <br />
-      A playable side-scroller prototype built around generated character, attack, map, and gameplay assets.
+      使用生成的角色、攻击、地图和 gameplay assets 组装出的可玩横向卷轴 prototype。
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <img src="./src/pokemonlike2.png" alt="Sengoku Era JavaScript RPG starter selection" width="420" />
       <br />
-      <strong>Sengoku Era — JavaScript Pokémon-like</strong>
+      <strong>Sengoku Era - JavaScript monster-taming RPG</strong>
       <br />
-      A browser-based RPG prototype with generated characters, starter selection, map flow, and battle UI.
+      浏览器 RPG prototype，包含生成角色、初始怪物选择、地图流程和战斗 UI。
       <br />
       <a href="https://sengoku-era.vercel.app/">Play build</a>
     </td>
@@ -103,190 +91,33 @@ These examples were assembled with agentic `agent-sprite-forge` workflows. They 
       <br />
       <strong>Starter selection and battle loop</strong>
       <br />
-      A compact JavaScript game showcase built from sprite, monster, battle, and map assets generated through the skill workflow.
+      用 skill workflow 生成 sprite、monster、battle 和 map assets 后完成的小型 JavaScript 游戏展示。
     </td>
   </tr>
 </table>
-
-<details>
-<summary>More Godot tower-defense output</summary>
-
-<table>
-  <tr>
-    <td align="center" width="40%">
-      <img src="./src/kingdomrush-enemy-roster.png" alt="Forest Pass Defense enemy roster" width="320" />
-      <br />
-      <strong>Enemy roster, including flyer and boss units</strong>
-    </td>
-    <td align="center" width="30%">
-      <img src="./src/kingdomrush-tower-icons.png" alt="Forest Pass Defense tower icons" width="260" />
-      <br />
-      <strong>Tower lineup</strong>
-    </td>
-    <td align="center" width="30%">
-      <img src="./src/kingdomrush-hud-icons.png" alt="Forest Pass Defense HUD icons" width="260" />
-      <br />
-      <strong>HUD and gameplay icons</strong>
-    </td>
-  </tr>
-</table>
-
-Godot prototype output includes:
-
-- `scenes/ForestPass.tscn` with base map, separated props, enemy paths, tower slots, and HUD nodes.
-- Six tower families with generated tower art and upgrade stages.
-- Animated enemy sheets for ground units, flying units, and boss encounters.
-- Wave, difficulty, tower catalog, collision, route, and tower-slot metadata.
-- Runtime build, upgrade, sell, projectile, and targeting behavior connected in Godot.
-
-```text
-imagegen manifest + separated props + tower sheets + enemy animation sheets + HUD icons + Godot gameplay wiring
-```
-
-</details>
-
-<details>
-<summary>More Unity survivors-like output</summary>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="./src/summon-survivors-game-preview1.png" alt="Summon Survivors Unity WebGL gameplay with summons, enemies, pickups, HUD, and objective" width="420" />
-      <br />
-      <strong>Unity WebGL gameplay: summons, enemies, pickups, HUD, and objective flow</strong>
-    </td>
-    <td align="center" width="50%">
-      <img src="./src/summon-survivors-game-preview2-levelup.png" alt="Summon Survivors Unity WebGL level-up menu" width="420" />
-      <br />
-      <strong>Level-up choices: summon unlocks, training, stats, and recovery</strong>
-    </td>
-  </tr>
-</table>
-
-Unity prototype output includes:
-
-- `Assets/Survivors/Scenes/SummonSurvivors.unity` as the playable scene.
-- `SurvivorContentDatabase.asset` connecting generated hero, summon, enemy, pickup, HUD, and FX sprites.
-- Starter summon selection, survival objective, XP/coin pickups, level-up choices, summon training, and evolution flow.
-- Enemy spawning pressure, boss timing, projectile attacks, area damage, health bars, and score tracking.
-- WebGL build output under `Builds/WebGL` with Vercel deployment config.
-
-```text
-imagegen manifest + directional hero sheets + summon/evolution sheets + enemy sheets + FX/HUD icons + Unity runtime + WebGL deploy
-```
-
-</details>
 
 ### Sprite Sheets And FX
 
-Use `$generate2dsprite` when you need animated units, playable characters, monsters, props, spell bundles, projectile/impact FX, or reference-guided variants.
+当你需要动画单位、玩家角色、怪物、props、spell bundles、projectile/impact FX，或参考图驱动的变体时，使用 `$generate2dsprite`。
 
 <table>
   <tr>
-    <td align="center" width="25%">
-      <img src="./src/goku-kame.gif" alt="Goku Kamehameha sprite animation" width="170" />
-      <br />
-      <strong>Text to sprite</strong>
-      <br />
-      Attack animation from a plain-language request.
-    </td>
-    <td align="center" width="25%">
-      <img src="./src/naruto-rasengan.gif" alt="Naruto Rasengan sprite animation" width="170" />
-      <br />
-      <strong>Character action</strong>
-      <br />
-      Compact 2D action sheet with transparent export.
-    </td>
-    <td align="center" width="25%">
-      <img src="./src/cast.gif" alt="Fire mage cast animation" width="150" />
-      <br />
-      <strong>Spell cast</strong>
-      <br />
-      Bundle-friendly cast animation.
-    </td>
-    <td align="center" width="25%">
-      <img src="./src/projectile.gif" alt="Fire mage projectile animation" width="150" />
-      <br />
-      <strong>Projectile</strong>
-      <br />
-      Matching projectile / impact workflows.
-    </td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td align="center" width="25%">
-      <img src="./src/down.gif" alt="Samurai walking down" width="132" />
-      <br />
-      <strong>Down</strong>
-    </td>
-    <td align="center" width="25%">
-      <img src="./src/left.gif" alt="Samurai walking left" width="132" />
-      <br />
-      <strong>Left</strong>
-    </td>
-    <td align="center" width="25%">
-      <img src="./src/right.gif" alt="Samurai walking right" width="132" />
-      <br />
-      <strong>Right</strong>
-    </td>
-    <td align="center" width="25%">
-      <img src="./src/up.gif" alt="Samurai walking up" width="132" />
-      <br />
-      <strong>Up</strong>
-    </td>
-  </tr>
-</table>
-
-<table>
-  <tr>
-    <td align="center" width="35%">
-      <img src="./src/ref1.jpg" alt="Reference crocodile" width="160" />
-      <br />
-      <strong>Reference</strong>
-    </td>
-    <td align="center" width="65%">
-      <img src="./src/croc_stone_play.gif" alt="Crocodile playing with a stone" width="220" />
-      <br />
-      <strong>Reference-guided sprite animation</strong>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="35%">
-      <img src="./src/ref2.jpg" alt="Reference male character" width="160" />
-      <br />
-      <strong>Reference</strong>
-    </td>
-    <td align="center" width="65%">
-      <img src="./src/cz.gif" alt="Male character teaching animation" width="220" />
-      <br />
-      <strong>Reference-guided character action</strong>
-    </td>
+    <td align="center" width="25%"><img src="./src/goku-kame.gif" alt="Goku Kamehameha sprite animation" width="170" /><br /><strong>Text to sprite</strong><br />从自然语言生成攻击动画。</td>
+    <td align="center" width="25%"><img src="./src/naruto-rasengan.gif" alt="Naruto Rasengan sprite animation" width="170" /><br /><strong>Character action</strong><br />紧凑的 2D 动作 sheet 和透明导出。</td>
+    <td align="center" width="25%"><img src="./src/cast.gif" alt="Fire mage cast animation" width="150" /><br /><strong>Spell cast</strong><br />适合 bundle 的施法动画。</td>
+    <td align="center" width="25%"><img src="./src/projectile.gif" alt="Fire mage projectile animation" width="150" /><br /><strong>Projectile</strong><br />匹配的 projectile / impact workflow。</td>
   </tr>
 </table>
 
 ### Layered RPG Map Pipeline
 
-Use `$generate2dmap` when you need maps instead of isolated sprites. For readable layered raster maps, the current workflow prefers a clean hand-painted HD game-map style: ground-only base first, dressed reference second, prop pack third, then transparent prop extraction and layered preview composition.
+当你需要地图而不是单独 sprite 时，使用 `$generate2dmap`。可读性较高的 layered raster map 目前推荐 clean hand-painted HD game-map style：先生成 ground-only base，再生成 dressed reference，接着生成 prop pack，最后做透明 prop extraction 和 layered preview composition。
 
 <table>
   <tr>
-    <td align="center" width="33%">
-      <img src="./src/cyber-canal-base.png" alt="Ground-only cyberpunk canal RPG base map" width="300" />
-      <br />
-      <strong>Ground-only base</strong>
-    </td>
-    <td align="center" width="33%">
-      <img src="./src/cyber-canal-dressed-reference.png" alt="Dressed cyberpunk canal reference map" width="300" />
-      <br />
-      <strong>Dressed reference</strong>
-    </td>
-    <td align="center" width="33%">
-      <img src="./src/cyber-canal-prop-pack.png" alt="Generated 3x3 cyberpunk canal prop pack" width="300" />
-      <br />
-      <strong>3x3 prop pack</strong>
-    </td>
+    <td align="center" width="33%"><img src="./src/cyber-canal-base.png" alt="Ground-only cyberpunk canal RPG base map" width="300" /><br /><strong>Ground-only base</strong></td>
+    <td align="center" width="33%"><img src="./src/cyber-canal-dressed-reference.png" alt="Dressed cyberpunk canal reference map" width="300" /><br /><strong>Dressed reference</strong></td>
+    <td align="center" width="33%"><img src="./src/cyber-canal-prop-pack.png" alt="Generated 3x3 cyberpunk canal prop pack" width="300" /><br /><strong>3x3 prop pack</strong></td>
   </tr>
 </table>
 
@@ -302,7 +133,7 @@ layered_raster + y_sorted_props + precise_shapes + trigger_zones + raw_canvas
 
 ### Godot Editable TileMap Export
 
-`$generate2dmap` can also produce an editable Godot map project instead of a single flattened image. This showcase uses an image-generated tileset and 3x3 prop sheet, then wires them into a Godot 4.5 scene.
+`$generate2dmap` 也可以输出可编辑 Godot map project，而不是只有一张 flattened image。这个 showcase 使用图像生成的 tileset 和 3x3 prop sheet，再接入 Godot 4.5 scene。
 
 <p align="center">
   <img src="./src/godot-editor.png" alt="Generate2DMap Godot editor scene with editable TileMapLayer and nodes" width="860" />
@@ -310,117 +141,40 @@ layered_raster + y_sorted_props + precise_shapes + trigger_zones + raw_canvas
   <strong>Godot editor scene: editable layers, props, zones, collision, exits, and debug player</strong>
 </p>
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="./src/godot-meadow-layered-preview.png" alt="Godot meadow layered RPG map preview" width="360" />
-      <br />
-      <strong>Layered map preview</strong>
-    </td>
-    <td align="center" width="50%">
-      <img src="./src/godot-meadow-debug-preview.png" alt="Godot meadow debug preview with collision and zones" width="360" />
-      <br />
-      <strong>Collision and zone debug overlay</strong>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="./src/godot-meadow-tileset.png" alt="Image-generated Godot meadow tileset atlas" width="360" />
-      <br />
-      <strong>Image-generated tileset atlas</strong>
-    </td>
-    <td align="center" width="50%">
-      <img src="./src/godot-meadow-prop-pack.png" alt="Image-generated 3x3 meadow prop pack" width="360" />
-      <br />
-      <strong>3x3 generated prop pack</strong>
-    </td>
-  </tr>
-</table>
-
-Godot output includes editable `TileMapLayer` nodes, independent `Sprite2D` props, encounter grass `Area2D` zones, `StaticBody2D` collision blockers, exit `Area2D` zones, and a debug player/camera.
+Godot 输出可以包含可编辑 `TileMapLayer` nodes、独立 `Sprite2D` props、遇怪草丛 `Area2D` zones、`StaticBody2D` collision blockers、exit `Area2D` zones，以及 debug player/camera。
 
 ```text
 imagegen manifest + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
 ```
 
-### Playable Game Prompt Examples
-
-<details>
-<summary>Cyberpunk side-scroller prompt</summary>
-
-```text
-use $generate2dsprite to create a 2D side-scrolling game similar to Mega Man. It should include attack mechanics, map elements, and all the essential features. I would like you to design it, and all the necessary assets should be created using this skill. It needs to be an actually playable game, with a cyberpunk story setting.
-```
-
-</details>
-
-<details>
-<summary>Sengoku Pokémon-like prototype</summary>
-
-Link: <a href="https://sengoku-era.vercel.app/">Play the JavaScript browser build</a>
-
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="./src/pokemonlike2.png" alt="Sengoku starter selection screen" width="360" />
-      <br />
-      <strong>Starter selection</strong>
-    </td>
-    <td align="center" width="50%">
-      <img src="./src/pokemonlike.png" alt="Sengoku battle screen" width="360" />
-      <br />
-      <strong>Battle scene</strong>
-    </td>
-  </tr>
-</table>
-
-```text
-Use $generate2dsprite to create a 2D game similar to Pokemon. You only need to build one scene for now. It must include a starter monster selection mechanic, a battle screen, and all basic gameplay functions. I would like you to design all the elements and the story, and you can also decide which game engine to use. Use this skill to create any assets you need. The story should be set in the Sengoku period.
-```
-
-</details>
-
 ## Included Skills
 
-| Skill | Use it for | Output |
+| Skill | 用途 | 输出 |
 | --- | --- | --- |
-| [`generate2dsprite`](./skills/generate2dsprite) | Sprites, animation sheets, props, spell bundles, FX, reference variants, optional layout guides for fixed-frame sheets | Raw sheet, cleaned transparent sheet, frames, GIFs, metadata |
-| [`generate2dmap`](./skills/generate2dmap) | Baked maps, layered raster maps, clean HD RPG maps, prop packs, collision/zones, Godot-editable scenes | Base map, dressed reference, prop pack, extracted props, preview, scene metadata |
+| [`generate2dsprite`](./skills/generate2dsprite) | Sprites、animation sheets、props、spell bundles、FX、参考图变体、固定 frame sheet 的 layout guide | raw sheet、cleaned transparent sheet、frames、GIFs、metadata |
+| [`generate2dmap`](./skills/generate2dmap) | baked maps、layered raster maps、clean HD RPG maps、prop packs、collision/zones、Godot-editable scenes、side-scroll/parallax scenes | base map、dressed/stage reference、prop pack、extracted props、preview、scene metadata |
 
-`$generate2dmap` only uses `$generate2dsprite` when the selected map pipeline needs reusable transparent props. Small environmental props can be batched into `2x2`, `3x3`, or `4x4` prop packs, then extracted into individual transparent props. Simple maps can stay as a single baked image.
-
-The first adapter implementation is text-to-image only. When a visual reference is involved, both skills record the intended reference role in `imagegen-request.json` / run notes and translate preferred references into explicit text constraints. Provider-native reference/edit calls are capability-gated future work, so required identity/layout preservation must fail clearly instead of silently pretending the text-to-image endpoint used the image.
+`$generate2dmap` 只有在地图流程需要可复用透明 props 时，才会搭配 `$generate2dsprite`。小型环境 props 可以批成 `2x2`、`3x3` 或 `4x4` prop packs，再切成独立透明 props。平台、地板、桥、墙、门和长条 hazard 这类碰撞关键物件，通常应该单独生成或用 tile/object layer 表达。
 
 ## How It Works
 
-1. The user asks an agent for a sprite, prop pack, map, or engine-ready prototype.
-2. The agent chooses the asset type, action, bundle shape, sheet layout, frame count, style, and alignment strategy.
-3. The agent writes `imagegen-request.json` and runs `agent-sprite-forge-imagegen generate` against an OpenAI-compatible `/v1/images/generations` endpoint.
-4. The adapter writes raw PNGs plus `imagegen-manifest.json`; existing local scripts then run deterministic post-processing: chroma-key cleanup, despill, frame extraction, alignment, prop-pack slicing, GIF/PNG export, and validation metadata.
-5. For maps and prototypes, the agent can also assemble placement metadata, collision, trigger zones, Godot scenes, or Unity project wiring.
+1. 用户请 agent 生成 sprite、prop pack、map 或 engine-ready prototype。
+2. Agent 判断 asset type、action、bundle shape、sheet layout、frame count、style 和 alignment strategy。
+3. Agent 写入 `imagegen-request.json`，运行 `agent-sprite-forge-imagegen generate` 调用 OpenAI-compatible `/v1/images/generations` 端点。
+4. Adapter 写出 raw PNG 和 `imagegen-manifest.json`；本地脚本再做 deterministic post-processing：chroma-key cleanup、despill、frame extraction、alignment、prop-pack slicing、GIF/PNG export 和 validation metadata。
+5. 对地图和 prototype，agent 也可以组装 placement metadata、collision、trigger zones、Godot scenes 或 Unity project wiring。
 
-The script is not the creative brain. The agent makes the visual and pipeline decisions; the Python tools only perform repeatable pixel and export operations.
-
-## What It Can Generate
-
-- Creatures, characters, players, NPCs, props, and monsters
-- Spell casts, projectiles, impacts, explosions, and FX sheets
-- Small bundles such as `unit_bundle`, `spell_bundle`, and `combat_bundle`
-- Reference-guided sprite variants, animation sheets, and evolution lines
-- Single baked maps, clean HD layered maps, prop-pack maps, and flattened previews
-- Collision and zone metadata for playable maps
-- Godot-ready editable maps with `TileMapLayer`, separate props, encounter grass, collision, exits, and debug player scenes
-- Prototype-scale Godot and Unity scenes when the user asks an agent to wire assets into an engine project
+脚本不是创意大脑。Agent 负责视觉和 pipeline 决策；Python 工具只做可重复的像素处理和导出。
 
 ## Install
 
-### Option 1: Windows PowerShell
+先 clone 仓库、安装 Python 包，再把两个 skills 复制到你的 agent skills 目录。下面沿用 Codex 默认路径示例；如果你使用 OpenCode、Claude Code、Gemini CLI 或其他 agent runtime，请改成对应的 skills 目录。
 
-Clone the repo, install the Python package and local processor dependencies, then copy both skills into your agent's skills directory. The examples below use Codex's default skill directory; use the equivalent directory for OpenCode, Claude Code, Gemini CLI, or another agent runtime.
+### Windows PowerShell
 
 ```powershell
-git clone https://github.com/0x0funky/agent-sprite-forge.git
-cd .\agent-sprite-forge
+git clone https://github.com/jingjie1135/OhMyASF.git
+cd .\OhMyASF
 python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
@@ -428,114 +182,77 @@ Copy-Item -Recurse -Force `
   "$env:USERPROFILE\.codex\skills\"
 ```
 
-### Option 2: macOS / Linux
+### macOS / Linux
 
 ```bash
-git clone https://github.com/0x0funky/agent-sprite-forge.git
-cd ./agent-sprite-forge
+git clone https://github.com/jingjie1135/OhMyASF.git
+cd ./OhMyASF
 python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
 ```
 
-Start a new agent session after installation so the skills are loaded cleanly.
+安装后请重开 agent session，让 skills 和命令入口被重新载入。
 
-## OpenAI-Compatible Image Provider
+## 使用方法
 
-Agent Sprite Forge uses one OpenAI-compatible endpoint for raw image generation. This works with new-api, One-API, LiteLLM-style gateways, or any provider that implements `/v1/images/generations`.
+### 1. 配置 OpenAI-Compatible 生图 provider
 
-1. Copy [`configs/imagegen.openai-compatible.example.json`](./configs/imagegen.openai-compatible.example.json) to your own config file.
-2. Set `base_url` to the gateway root, usually including `/v1`.
-3. Set `api_key_env` to the environment variable that stores your key.
-4. Export the key before a live run.
+Agent Sprite Forge 使用单一 OpenAI-compatible 端点生成 raw image，可接入 new-api、One-API、LiteLLM 风格网关，或任何实现 `/v1/images/generations` 的 provider。
+
+1. 复制 [`configs/imagegen.openai-compatible.example.json`](./configs/imagegen.openai-compatible.example.json) 为自己的配置。
+2. 将 `base_url` 改成网关地址，通常包含 `/v1`。
+3. 将 `api_key_env` 改成保存 API key 的环境变量名。
+4. live run 前导出对应 key。
 
 ```bash
 export NEW_API_KEY="sk-..."
-python -m agent_sprite_forge.imagegen generate \
+agent-sprite-forge-imagegen generate \
   --config configs/imagegen.openai-compatible.example.json \
   --request examples/imagegen/sprite-2x2-idle.request.json \
   --output-dir outputs/imagegen-smoke/sprite
 ```
 
-Use `--dry-run` first to verify request loading, routing, and manifest writing without spending provider credits:
+### 2. 先执行 dry-run
+
+先用 `--dry-run` 验证 request 解析、模型选择、路由和 manifest 写入，不消耗 provider 额度：
 
 ```bash
-python -m agent_sprite_forge.imagegen generate \
+agent-sprite-forge-imagegen generate \
   --config configs/imagegen.openai-compatible.example.json \
   --request examples/imagegen/map-side-scroll-16x9.request.json \
   --output-dir outputs/imagegen-smoke/map \
   --dry-run
 ```
 
-Live smoke tests consume provider credits and are not part of the unit test suite.
+### 3. 在 agent 中调用 skill
 
-## Model Selection
-
-The adapter does not hardcode one model because sprites and maps need different aspect ratios. By default it uses Firefly image model IDs in the form `{family}-{resolution}-{ratio}` and records the selected model in `imagegen-manifest.json`.
-
-- Standard sprite sheets: `firefly-gpt-image-1k-1x1`
-- High-value hero or dense `4x4` sheets: `firefly-gpt-image-2k-1x1`
-- Compact prop packs: square `1x1` models
-- Side-scroll parallax layers and stage references: `16x9` models
-- Portrait/mobile scenes: `9x16` models
-- Wide platform strips, bridges, and long hazards: `4x1` or `8x1` through `firefly-nano-banana2`
-
-The default `size_mode` is `model_id`, so the adapter does not send a separate `size` field unless requested. This avoids conflicts when a gateway encodes resolution and ratio in the model name. Video model families such as Sora, Veo, or Kling are intentionally excluded; sprite GIFs are generated locally from sprite sheets.
-
-## Python Requirements
-
-The local post-processor depends on:
-
-- `Pillow`
-- `numpy`
-
-They are listed in [`requirements.txt`](./requirements.txt) and `pyproject.toml`. The imagegen adapter handles raw image requests, and these Python packages are still needed for magenta background removal, frame splitting, bounding-box extraction, alignment/rescaling, transparent GIF/PNG export, and prop-pack slicing.
-
-## Repository Layout
+完成安装与配置后，重开 agent session，然后直接在对话里调用 `$generate2dsprite` 或 `$generate2dmap`。例如：
 
 ```text
-agent-sprite-forge/
-  README.md
-  README.zh-TW.md
-  README.zh-CN.md
-  README.ja.md
-  README.ko.md
-  requirements.txt
-  pyproject.toml
-  agent_sprite_forge/
-    imagegen/
-      cli.py
-      config.py
-      model_resolver.py
-      openai_compatible.py
-  configs/
-    imagegen.openai-compatible.example.json
-  examples/
-    imagegen/
-  src/
-  skills/
-    generate2dmap/
-      SKILL.md
-      agents/
-        openai.yaml
-      references/
-        layered-map-contract.md
-        map-strategies.md
-        prop-pack-contract.md
-      scripts/
-        compose_layered_preview.py
-        extract_prop_pack.py
-    generate2dsprite/
-      SKILL.md
-      agents/
-        openai.yaml
-      references/
-        modes.md
-        prompt-rules.md
-      scripts/
-        generate2dsprite.py
-        make_layout_guide.py
+Use $generate2dsprite to create a 3x3 idle for an ultimate earth titan.
 ```
+
+```text
+Use $generate2dmap to create a Godot-editable RPG map with separated props, encounter grass Area2D zones, collision StaticBody2D blockers, exit zones, and a debug player scene.
+```
+
+如果你只是想调试底层适配器，而不是整条 skill 工作流，也可以直接构造 `imagegen-request.json` 后运行 `agent-sprite-forge-imagegen generate`。
+
+live smoke test 会消耗 provider 额度，不属于普通单元测试。
+
+## 模型选择
+
+Adapter 不固定单一模型，因为 sprite sheet 和地图需要不同宽高比。默认使用 `{family}-{resolution}-{ratio}` 形式的 Firefly 图片模型 ID，并把最终选择写入 `imagegen-manifest.json`。
+
+- 标准 sprite sheet：`firefly-gpt-image-1k-1x1`
+- 高价值主角或密集 `4x4` sheet：`firefly-gpt-image-2k-1x1`
+- compact prop pack：方形 `1x1` 模型
+- side-scroll parallax layer / stage reference：`16x9` 模型
+- portrait/mobile 场景：`9x16` 模型
+- 宽平台、桥、长条 hazard：通过 `firefly-nano-banana2` 走 `4x1` 或 `8x1`
+
+默认 `size_mode` 是 `model_id`，即不额外发送 `size`，避免网关模型名已经编码分辨率/比例时产生冲突。Sora、Veo、Kling 等视频模型不会进入当前图片 selector；GIF 仍由本地 sprite sheet 切帧生成。
 
 ## Suggested Prompts
 
@@ -550,62 +267,53 @@ Use $generate2dsprite to create a side-view lightning knight attack animation.
 ```
 
 ```text
-Use $generate2dsprite to create a late-Sengoku player_sheet for a wandering fire swordsman.
-```
-
-```text
 Use $generate2dsprite to create a wizard spell bundle with cast, projectile, and impact sprites.
 ```
 
 ### Map
 
 ```text
-Use $generate2dmap to create a small fixed-screen pixel-art battle arena with simple collision.
-```
-
-```text
-Use $generate2dmap to create a top-down RPG forest shrine map. Use a layered raster pipeline, a 3x3 prop pack for small environmental props, precise collision, encounter grass zones, a rest point, and actors that can walk in front of and behind tall props.
-```
-
-```text
 Use $generate2dmap to create a Godot-editable RPG map with separated props, encounter grass Area2D zones, collision StaticBody2D blockers, exit zones, and a debug player scene.
+```
+
+```text
+Use $generate2dmap to create a playable side_scroll_mode platformer stage with parallax layers, stage-reference, separate platform_objects, collision metadata, camera bounds, and a stage-preview.
 ```
 
 ## What You Get
 
-For a typical sprite sheet output:
+典型 sprite sheet 输出：
 
 - `raw-sheet.png`
 - `raw-sheet-clean.png`
 - `sheet-transparent.png`
-- Frame PNGs
+- frame PNGs
 - `animation.gif`
 - `prompt-used.txt`
 - `pipeline-meta.json`
 
-For player walk sheets, you also get direction strips and per-direction GIFs.
+地图输出取决于 pipeline：
 
-For a map output, the result depends on the chosen pipeline:
-
-- Single baked map: complete map image, optional prompt file, and optional collision metadata.
-- Layered raster map: base map, dressed reference, prop folders or prop-pack extraction manifest, prop placement metadata, collision/zones metadata, and flattened layered preview.
-- Godot editable map: tileset/prop assets, scene files, layer metadata, collision/zones, exits, and debug player setup.
+- Single baked map：完整地图图像、可选 prompt file、可选 collision metadata。
+- Layered raster map：base map、dressed reference、prop folders 或 prop-pack extraction manifest、prop placement metadata、collision/zones metadata、flattened layered preview。
+- Side-scroll map：parallax layers、stage reference、separate platform/object assets、objects/collision metadata、camera bounds、stage preview。
+- Godot editable map：tileset/prop assets、scene files、layer metadata、collision/zones、exits、debug player setup。
 
 ## Notes
 
-- Best results come from prompts that clearly specify view, action, and desired motion style.
-- Large creatures often work better as `3x3 idle`.
-- Small spells and projectiles often work better as `1x4`, `2x2`, or `2x3`.
-- Layout guides are useful for fixed-frame action sheets and prop packs, but they are not always better for compact attack sheets.
-- For commercial projects, prefer original characters or IP that you control.
+- 最好的结果来自明确指定视角、动作和动作节奏的 prompt。
+- 大型 creature 通常更适合 `3x3 idle`。
+- 小型 spell、projectile 和 impact 通常适合 `2x2` 或 `2x3`。
+- 主角攻击、射击、施法动作建议 body-only；大范围 slash、muzzle flash、projectile、impact 独立生成成 FX。
+- 商业项目请优先使用原创角色或你拥有权利的 IP。
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=0x0funky%2Fagent-sprite-forge&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=jingjie1135%2FOhMyASF&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&legend=top-left" />
  </picture>
 </a>
 
