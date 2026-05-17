@@ -7,11 +7,11 @@
 </p>
 
 <p align="center">
-  <strong>給 Codex 使用的 2D 遊戲資產 skills：生成可用於遊戲的 sprite、分層地圖與 engine-ready prototype。</strong>
+  <strong>給通用 agent 使用的 2D 遊戲資產 skills：透過 OpenAI-compatible 生圖端點生成可用於遊戲的 sprite、分層地圖與 engine-ready prototype。</strong>
 </p>
 
 <p align="center">
-  用自然語言下需求。Codex 負責規劃資產 pipeline、使用內建 image generation 生圖，再由本地 processor 去背、切格、驗證與輸出，讓素材可以進 Godot、Unity 或一般 2D game workflow。
+  用自然語言下需求。Agent 負責規劃資產 pipeline，透過 new-api / One-API / LiteLLM 類 OpenAI-compatible 端點生圖，再由本地 processor 去背、切格、驗證與輸出，讓素材可以進 Godot、Unity 或一般 2D game workflow。
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ## 這個 repo 解決什麼
 
-Agent Sprite Forge 不是單純的 prompt 集合。它是一組以 Codex 為核心的 2D game asset workflow：agent 先決定資產規劃，image generation 產生 raw visual，最後用 deterministic scripts 轉成真正可重用的遊戲素材。
+Agent Sprite Forge 不是單純的 prompt 集合。它是一組 agent-compatible 的 2D game asset workflow：agent 先決定資產規劃，OpenAI-compatible image provider 產生 raw visual，最後用 deterministic scripts 轉成真正可重用的遊戲素材。
 
 <table>
   <tr>
@@ -51,7 +51,7 @@ Agent Sprite Forge 不是單純的 prompt 集合。它是一組以 Codex 為核�
 
 ### Engine-Ready Prototypes
 
-這些範例都是用 Codex 搭配 `agent-sprite-forge` workflow 做出的成果。重點不是單張圖，而是完整流程：生成素材、整理 scene data，並接到可玩的 prototype 或可編輯的 engine scene。
+這些範例都是用 agentic `agent-sprite-forge` workflow 做出的成果。重點不是單張圖，而是完整流程：生成素材、整理 scene data，並接到可玩的 prototype 或可編輯的 engine scene。
 
 <table>
   <tr>
@@ -140,7 +140,7 @@ Godot prototype 輸出包含：
 - Godot 內已接好的建塔、升級、賣塔、投射物與目標判定邏輯。
 
 ```text
-image_gen map + separated props + tower sheets + enemy animation sheets + HUD icons + Godot gameplay wiring
+imagegen manifest + separated props + tower sheets + enemy animation sheets + HUD icons + Godot gameplay wiring
 ```
 
 </details>
@@ -172,7 +172,7 @@ Unity prototype 輸出包含：
 - `Builds/WebGL` WebGL build output 與 Vercel deployment config。
 
 ```text
-image_gen map + directional hero sheets + summon/evolution sheets + enemy sheets + FX/HUD icons + Unity runtime + WebGL deploy
+imagegen manifest + directional hero sheets + summon/evolution sheets + enemy sheets + FX/HUD icons + Unity runtime + WebGL deploy
 ```
 
 </details>
@@ -340,7 +340,7 @@ layered_raster + y_sorted_props + precise_shapes + trigger_zones + raw_canvas
 Godot 輸出包含可調整的 `TileMapLayer`、獨立 `Sprite2D` props、遇怪草叢 `Area2D` zones、`StaticBody2D` collision blockers、出口 `Area2D` zones，以及 debug player/camera。
 
 ```text
-image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
+imagegen manifest + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
 ```
 
 ### 可玩遊戲 Prompt 範例
@@ -389,15 +389,15 @@ Use $generate2dsprite to create a 2D game similar to Pokemon. You only need to b
 
 `$generate2dmap` 只有在選定的地圖 pipeline 需要可重用透明 props 時，才會使用 `$generate2dsprite`。小型環境物件可以批次生成為 `2x2`、`3x3` 或 `4x4` prop pack，再切成個別透明 props。簡單地圖可以維持單張 baked image。
 
-當流程需要視覺 reference 時，兩個 skills 都遵守同一個 wrapper 規則：先讓圖片出現在對話上下文。使用者上傳的圖片與剛生成的圖片已經在上下文中；local file 則先用 `view_image` 打開，再要求內建 image generation 保留角色 identity、風格、地圖 layout 或 sprite 進化脈絡。
+第一版 adapter 目前是 text-to-image。當流程需要視覺 reference 時，兩個 skills 會把 reference 的用途記錄在 `imagegen-request.json` / run notes，並把可降級的 reference 轉寫成明確文字約束；若需求必須精準保留 identity 或 layout，則要在支援 reference/edit 的後續 adapter path 上線前明確失敗，而不是假裝 endpoint 已讀取圖片。
 
 ## 運作方式
 
-1. 使用者請 Codex 生成 sprite、prop pack、地圖或 engine-ready prototype。
+1. 使用者請 agent 生成 sprite、prop pack、地圖或 engine-ready prototype。
 2. Agent 決定 asset type、action、bundle shape、sheet layout、frame count、style 與 alignment strategy。
-3. Codex 內建 image generation 產生 raw visual asset。
-4. 本地 scripts 做 deterministic post-processing：洋紅去背、despill、切格、對齊、prop-pack slicing、GIF / PNG export 與 validation metadata。
-5. 對地圖或 prototype，Codex 也可以組裝 placement metadata、collision、trigger zones、Godot scenes 或 Unity project wiring。
+3. Agent 寫入 `imagegen-request.json`，執行 `agent-sprite-forge-imagegen generate` 呼叫 OpenAI-compatible `/v1/images/generations` endpoint。
+4. Adapter 寫出 raw PNG 與 `imagegen-manifest.json`；本地 scripts 再做 deterministic post-processing：洋紅去背、despill、切格、對齊、prop-pack slicing、GIF / PNG export 與 validation metadata。
+5. 對地圖或 prototype，agent 也可以組裝 placement metadata、collision、trigger zones、Godot scenes 或 Unity project wiring。
 
 Script 不是創意大腦。Agent 負責美術與 pipeline 決策，Python tools 只負責可重現的像素處理與輸出。
 
@@ -416,12 +416,12 @@ Script 不是創意大腦。Agent 負責美術與 pipeline 決策，Python tools
 
 ### Option 1: Windows PowerShell
 
-先 clone repo，安裝本地 processor 依賴，再把兩個 skills 複製到 Codex skills 目錄：
+先 clone repo，安裝 Python package 與本地 processor 依賴，再把兩個 skills 複製到你的 agent skills 目錄。下面沿用 Codex 預設路徑示例；OpenCode、Claude Code、Gemini CLI 或其他 agent runtime 請改用各自的 skills 目錄。
 
 ```powershell
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd .\agent-sprite-forge
-python -m pip install -r .\requirements.txt
+python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
   ".\skills\*" `
@@ -433,12 +433,12 @@ Copy-Item -Recurse -Force `
 ```bash
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd ./agent-sprite-forge
-python3 -m pip install -r ./requirements.txt
+python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
 ```
 
-安裝完後建議重新開一個新的 Codex session，讓 skills 重新載入。
+安裝完後建議重新開一個新的 agent session，讓 skills 重新載入。
 
 ## Python 依賴
 
@@ -447,7 +447,7 @@ cp -R ./skills/* ~/.codex/skills/
 - `Pillow`
 - `numpy`
 
-這些都列在 [`requirements.txt`](./requirements.txt)。雖然 Codex 本身負責生圖，但你仍然需要這些 Python 套件完成洋紅去背、切格、主體 bbox 偵測、對齊 / 縮放、透明 PNG / GIF 輸出，以及 prop-pack slicing。
+這些都列在 [`requirements.txt`](./requirements.txt) 與 `pyproject.toml`。imagegen adapter 負責 raw image request，而這些 Python 套件仍然負責洋紅去背、切格、主體 bbox 偵測、對齊 / 縮放、透明 PNG / GIF 輸出，以及 prop-pack slicing。
 
 ## Repo 結構
 

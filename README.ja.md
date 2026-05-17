@@ -7,11 +7,11 @@
 </p>
 
 <p align="center">
-  <strong>Codex 向けの 2D ゲームアセット Skill。ゲームで使えるスプライト、レイヤー化されたマップ、エンジンへ渡せるプロトタイプ素材を生成します。</strong>
+  <strong>汎用 agent 向けの 2D ゲームアセット Skill。OpenAI-compatible 画像生成エンドポイントで、ゲームで使えるスプライト、レイヤー化されたマップ、エンジンへ渡せるプロトタイプ素材を生成します。</strong>
 </p>
 
 <p align="center">
-  自然言語で依頼すると、Codex がアセット制作パイプラインを設計し、内蔵画像生成で元画像を作り、ローカル処理で背景除去、フレーム分割、整列、検証、Godot / Unity / 通常の 2D ゲーム向けエクスポートを行います。
+  自然言語で依頼すると、agent がアセット制作パイプラインを設計し、new-api / One-API / LiteLLM 互換の OpenAI-compatible 画像生成エンドポイントで元画像を作り、ローカル処理で背景除去、フレーム分割、整列、検証、Godot / Unity / 通常の 2D ゲーム向けエクスポートを行います。
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ## 何が違うのか
 
-Agent Sprite Forge は単なる prompt 集ではありません。Codex-first の 2D ゲームアセット制作ワークフローです。Agent が必要なアセットと手順を判断し、画像生成がビジュアルを作り、決定論的なローカルスクリプトが再利用可能なゲーム素材へ整えます。
+Agent Sprite Forge は単なる prompt 集ではありません。agent-compatible な 2D ゲームアセット制作ワークフローです。Agent が必要なアセットと手順を判断し、OpenAI-compatible image provider がビジュアルを作り、決定論的なローカルスクリプトが再利用可能なゲーム素材へ整えます。
 
 <table>
   <tr>
@@ -39,7 +39,7 @@ Agent Sprite Forge は単なる prompt 集ではありません。Codex-first �
 
 ### Engine-Ready Prototypes
 
-以下は Codex と `agent-sprite-forge` workflow で組み立てた例です。生成アセット、構造化されたシーンデータ、実際に遊べる prototype wiring までを示します。
+以下は agentic な `agent-sprite-forge` workflow で組み立てた例です。生成アセット、構造化されたシーンデータ、実際に遊べる prototype wiring までを示します。
 
 <table>
   <tr>
@@ -144,7 +144,7 @@ layered_raster + y_sorted_props + precise_shapes + trigger_zones + raw_canvas
 Godot 出力には、編集可能な `TileMapLayer` nodes、独立した `Sprite2D` props、encounter grass `Area2D` zones、`StaticBody2D` collision blockers、exit `Area2D` zones、debug player/camera を含められます。
 
 ```text
-image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
+imagegen manifest + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
 ```
 
 ## Included Skills
@@ -158,11 +158,11 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 
 ## How It Works
 
-1. ユーザーが Codex に sprite、prop pack、map、engine-ready prototype を依頼します。
+1. ユーザーが agent に sprite、prop pack、map、engine-ready prototype を依頼します。
 2. Agent が asset type、action、bundle shape、sheet layout、frame count、style、alignment strategy を決めます。
-3. 内蔵画像生成が raw visual asset を作ります。
-4. ローカルスクリプトが deterministic post-processing を行います：chroma-key cleanup、despill、frame extraction、alignment、prop-pack slicing、GIF/PNG export、validation metadata。
-5. マップや prototype では、placement metadata、collision、trigger zones、Godot scenes、Unity project wiring も Codex が組み立てられます。
+3. Agent が `imagegen-request.json` を書き、`agent-sprite-forge-imagegen generate` を実行して OpenAI-compatible `/v1/images/generations` endpoint を呼び出します。
+4. Adapter が raw PNG と `imagegen-manifest.json` を書き出し、その後ローカルスクリプトが deterministic post-processing を行います：chroma-key cleanup、despill、frame extraction、alignment、prop-pack slicing、GIF/PNG export、validation metadata。
+5. マップや prototype では、placement metadata、collision、trigger zones、Godot scenes、Unity project wiring も agent が組み立てられます。
 
 スクリプトは創造部分を担当しません。視覚と pipeline の判断は Agent が行い、Python tools は再現可能な pixel/export 処理だけを担当します。
 
@@ -173,7 +173,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 ```powershell
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd .\agent-sprite-forge
-python -m pip install -r .\requirements.txt
+python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
   ".\skills\*" `
@@ -185,12 +185,12 @@ Copy-Item -Recurse -Force `
 ```bash
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd ./agent-sprite-forge
-python3 -m pip install -r ./requirements.txt
+python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
 ```
 
-インストール後は、新しい Codex session を開始して skills を読み込み直してください。
+インストール後は、新しい agent session を開始して skills を読み込み直してください。
 
 ## Suggested Prompts
 

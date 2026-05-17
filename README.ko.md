@@ -7,11 +7,11 @@
 </p>
 
 <p align="center">
-  <strong>Codex용 2D 게임 에셋 Skill입니다. 게임에서 바로 다룰 수 있는 스프라이트, 레이어드 맵, 엔진 연동형 프로토타입 에셋을 생성합니다.</strong>
+  <strong>범용 agent용 2D 게임 에셋 Skill입니다. OpenAI-compatible 이미지 생성 엔드포인트로 게임에서 바로 다룰 수 있는 스프라이트, 레이어드 맵, 엔진 연동형 프로토타입 에셋을 생성합니다.</strong>
 </p>
 
 <p align="center">
-  자연어로 요청하면 Codex가 에셋 파이프라인을 계획하고, 내장 이미지 생성으로 원본 비주얼을 만든 뒤, 로컬 프로세서가 배경 제거, 프레임 분할, 정렬, 검증, Godot / Unity / 일반 2D 게임 워크플로용 내보내기를 수행합니다.
+  자연어로 요청하면 agent가 에셋 파이프라인을 계획하고, new-api / One-API / LiteLLM 계열 OpenAI-compatible 이미지 생성 엔드포인트로 원본 비주얼을 만든 뒤, 로컬 프로세서가 배경 제거, 프레임 분할, 정렬, 검증, Godot / Unity / 일반 2D 게임 워크플로용 내보내기를 수행합니다.
 </p>
 
 <p align="center">
@@ -24,7 +24,7 @@
 
 ## 무엇이 다른가
 
-Agent Sprite Forge는 단순한 prompt 모음이 아닙니다. Codex-first 방식의 2D 게임 에셋 제작 워크플로입니다. Agent가 필요한 에셋과 제작 흐름을 판단하고, 이미지 생성이 원본 비주얼을 만들며, 결정론적 로컬 스크립트가 이를 재사용 가능한 게임 에셋으로 정리합니다.
+Agent Sprite Forge는 단순한 prompt 모음이 아닙니다. agent-compatible 방식의 2D 게임 에셋 제작 워크플로입니다. Agent가 필요한 에셋과 제작 흐름을 판단하고, OpenAI-compatible image provider가 원본 비주얼을 만들며, 결정론적 로컬 스크립트가 이를 재사용 가능한 게임 에셋으로 정리합니다.
 
 <table>
   <tr>
@@ -39,7 +39,7 @@ Agent Sprite Forge는 단순한 prompt 모음이 아닙니다. Codex-first 방�
 
 ### Engine-Ready Prototypes
 
-아래 예시는 Codex와 `agent-sprite-forge` workflow로 조립되었습니다. 생성된 에셋, 구조화된 scene data, 실제 플레이 가능한 prototype wiring까지 보여줍니다.
+아래 예시는 agentic `agent-sprite-forge` workflow로 조립되었습니다. 생성된 에셋, 구조화된 scene data, 실제 플레이 가능한 prototype wiring까지 보여줍니다.
 
 <table>
   <tr>
@@ -144,7 +144,7 @@ layered_raster + y_sorted_props + precise_shapes + trigger_zones + raw_canvas
 Godot output에는 편집 가능한 `TileMapLayer` nodes, independent `Sprite2D` props, encounter grass `Area2D` zones, `StaticBody2D` collision blockers, exit `Area2D` zones, debug player/camera를 포함할 수 있습니다.
 
 ```text
-image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
+imagegen manifest + prop_pack_3x3 + layered_tilemap + separate_props + trigger_zones + Godot_TileMap
 ```
 
 ## Included Skills
@@ -158,11 +158,11 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 
 ## How It Works
 
-1. 사용자가 Codex에 sprite, prop pack, map, engine-ready prototype을 요청합니다.
+1. 사용자가 agent에 sprite, prop pack, map, engine-ready prototype을 요청합니다.
 2. Agent가 asset type, action, bundle shape, sheet layout, frame count, style, alignment strategy를 결정합니다.
-3. 내장 이미지 생성이 raw visual asset을 만듭니다.
-4. 로컬 스크립트가 deterministic post-processing을 수행합니다: chroma-key cleanup, despill, frame extraction, alignment, prop-pack slicing, GIF/PNG export, validation metadata.
-5. map과 prototype의 경우 Codex가 placement metadata, collision, trigger zones, Godot scenes, Unity project wiring도 조립할 수 있습니다.
+3. Agent가 `imagegen-request.json`을 작성하고 `agent-sprite-forge-imagegen generate`를 실행해 OpenAI-compatible `/v1/images/generations` endpoint를 호출합니다.
+4. Adapter가 raw PNG와 `imagegen-manifest.json`을 기록한 뒤, 로컬 스크립트가 deterministic post-processing을 수행합니다: chroma-key cleanup, despill, frame extraction, alignment, prop-pack slicing, GIF/PNG export, validation metadata.
+5. map과 prototype의 경우 agent가 placement metadata, collision, trigger zones, Godot scenes, Unity project wiring도 조립할 수 있습니다.
 
 스크립트는 창작의 중심이 아닙니다. 시각적 판단과 pipeline 결정은 Agent가 하고, Python tools는 반복 가능한 pixel/export 처리만 담당합니다.
 
@@ -173,7 +173,7 @@ image_gen tileset + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 ```powershell
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd .\agent-sprite-forge
-python -m pip install -r .\requirements.txt
+python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
   ".\skills\*" `
@@ -185,12 +185,12 @@ Copy-Item -Recurse -Force `
 ```bash
 git clone https://github.com/0x0funky/agent-sprite-forge.git
 cd ./agent-sprite-forge
-python3 -m pip install -r ./requirements.txt
+python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
 ```
 
-설치 후 새 Codex session을 시작해 skills를 다시 로드하세요.
+설치 후 새 agent session을 시작해 skills를 다시 로드하세요.
 
 ## Suggested Prompts
 
