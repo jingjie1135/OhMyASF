@@ -1,0 +1,8 @@
+{
+  "version": "1",
+  "task_type": "text_to_image",
+  "asset_role": "prop_pack",
+  "quality": "high",
+  "output_name": "prop-pack-3x3-raw",
+  "prompt": "Create an exact 3x3 compact prop pack for a fantasy forest shrine. Nine separate props on solid magenta #FF00FF background, one centered object per cell, no borders, no labels."
+}

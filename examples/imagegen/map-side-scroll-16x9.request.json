@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "task_type": "text_to_image",
+  "asset_role": "side_scroll_layer",
+  "map_mode": "side_scroll_mode",
+  "quality": "high",
+  "output_name": "side-scroll-stage-raw",
+  "prompt": "Create a 16:9 cyberpunk side-scroller stage background layer. Wide readable gameplay silhouettes, separated foreground path, no UI, no text."
+}
