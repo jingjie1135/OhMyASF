@@ -1,6 +1,6 @@
 # Agent Sprite Forge
 
-언어: [English](./README.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
+언어: [English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 <p align="center">
   <img src="./src/banner.png" alt="Agent Sprite Forge banner" width="900" />
@@ -171,8 +171,8 @@ imagegen manifest + prop_pack_3x3 + layered_tilemap + separate_props + trigger_z
 ### Windows PowerShell
 
 ```powershell
-git clone https://github.com/0x0funky/agent-sprite-forge.git
-cd .\agent-sprite-forge
+git clone https://github.com/jingjie1135/OhMyASF.git
+cd .\OhMyASF
 python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
@@ -183,8 +183,8 @@ Copy-Item -Recurse -Force `
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/0x0funky/agent-sprite-forge.git
-cd ./agent-sprite-forge
+git clone https://github.com/jingjie1135/OhMyASF.git
+cd ./OhMyASF
 python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
@@ -247,11 +247,11 @@ map output은 선택한 pipeline에 따라 달라집니다:
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=0x0funky%2Fagent-sprite-forge&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=jingjie1135%2FOhMyASF&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&legend=top-left" />
  </picture>
 </a>
 

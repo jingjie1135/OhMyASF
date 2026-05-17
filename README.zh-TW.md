@@ -1,6 +1,6 @@
 # Agent Sprite Forge
 
-語言：[English](./README.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.zh-CN.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
+語言：[English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 <p align="center">
   <img src="./src/banner.png" alt="Agent Sprite Forge banner" width="900" />
@@ -419,8 +419,8 @@ Script 不是創意大腦。Agent 負責美術與 pipeline 決策，Python tools
 先 clone repo，安裝 Python package 與本地 processor 依賴，再把兩個 skills 複製到你的 agent skills 目錄。下面沿用 Codex 預設路徑示例；OpenCode、Claude Code、Gemini CLI 或其他 agent runtime 請改用各自的 skills 目錄。
 
 ```powershell
-git clone https://github.com/0x0funky/agent-sprite-forge.git
-cd .\agent-sprite-forge
+git clone https://github.com/jingjie1135/OhMyASF.git
+cd .\OhMyASF
 python -m pip install -e .
 New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.codex\skills" | Out-Null
 Copy-Item -Recurse -Force `
@@ -431,8 +431,8 @@ Copy-Item -Recurse -Force `
 ### Option 2: macOS / Linux
 
 ```bash
-git clone https://github.com/0x0funky/agent-sprite-forge.git
-cd ./agent-sprite-forge
+git clone https://github.com/jingjie1135/OhMyASF.git
+cd ./OhMyASF
 python3 -m pip install -e .
 mkdir -p ~/.codex/skills
 cp -R ./skills/* ~/.codex/skills/
@@ -452,8 +452,10 @@ cp -R ./skills/* ~/.codex/skills/
 ## Repo 結構
 
 ```text
-agent-sprite-forge/
+OhMyASF/
   README.md
+  README.en.md
+  README.zh-CN.md
   README.zh-TW.md
   requirements.txt
   src/
@@ -545,11 +547,11 @@ Use $generate2dmap to create a Godot-editable RPG map with separated props, enco
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=0x0funky%2Fagent-sprite-forge&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=jingjie1135%2FOhMyASF&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=0x0funky/agent-sprite-forge&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=jingjie1135/OhMyASF&type=date&legend=top-left" />
  </picture>
 </a>
 
