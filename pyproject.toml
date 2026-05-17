@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-sprite-forge"
+version = "0.1.0"
+description = "Agent-compatible 2D game asset workflows with OpenAI-compatible image generation."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "Pillow>=10.0",
+  "numpy>=1.26",
+]
+
+[project.scripts]
+agent-sprite-forge-imagegen = "agent_sprite_forge.imagegen.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["agent_sprite_forge*"]
