@@ -1,0 +1,12 @@
+{
+  "provider": "openai_compatible",
+  "base_url": "https://new-api.example.com/v1",
+  "api_key_env": "NEW_API_KEY",
+  "default_family": "firefly-gpt-image",
+  "default_resolution": "1k",
+  "default_ratio": "1x1",
+  "size_mode": "model_id",
+  "response_format": "b64_json",
+  "timeout_seconds": 120,
+  "extra_body": {}
+}

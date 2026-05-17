@@ -1,0 +1,8 @@
+{
+  "version": "1",
+  "task_type": "text_to_image",
+  "asset_role": "sprite_sheet",
+  "quality": "standard",
+  "output_name": "sprite-2x2-idle-raw",
+  "prompt": "Create an exact 2x2 idle sprite sheet for an original fire mage. Solid flat magenta #FF00FF background, no borders, no labels, centered full-body subject in each cell."
+}

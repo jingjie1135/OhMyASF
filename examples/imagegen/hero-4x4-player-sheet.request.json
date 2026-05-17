@@ -1,0 +1,8 @@
+{
+  "version": "1",
+  "task_type": "text_to_image",
+  "asset_role": "player_sheet",
+  "quality": "high",
+  "output_name": "hero-4x4-player-sheet-raw",
+  "prompt": "Create an exact 4x4 top-down RPG player walk sheet for an original wandering fire swordsman. Rows are down, left, right, up; four walk frames per row. Solid magenta background, stable scale, no labels."
+}
