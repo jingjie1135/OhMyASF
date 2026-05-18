@@ -1,17 +1,21 @@
-# Agent Sprite Forge
+# OhMyASF
 
 語言：[English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 <p align="center">
-  <img src="./src/banner.png" alt="Agent Sprite Forge banner" width="900" />
+  <img src="./src/banner.png" alt="OhMyASF banner" width="900" />
 </p>
 
 <p align="center">
-  <strong>給通用 agent 使用的 2D 遊戲資產 skills：透過 OpenAI-compatible 生圖端點生成可用於遊戲的 sprite、分層地圖與 engine-ready prototype。</strong>
+  <strong>給任何支援 Skills 的 AI agent 使用的 2D 遊戲資產 workflow：透過 OpenAI-compatible 生圖端點生成可用於遊戲的 sprite、分層地圖與 engine-ready prototype。</strong>
 </p>
 
 <p align="center">
   用自然語言下需求。Agent 負責規劃資產 pipeline，透過 new-api / One-API / LiteLLM 類 OpenAI-compatible 端點生圖，再由本地 processor 去背、切格、驗證與輸出，讓素材可以進 Godot、Unity 或一般 2D game workflow。
+</p>
+
+<p align="center">
+  OhMyASF 基於 Agent Sprite Forge 演進而來，但已從原本偏 Codex-first 的流程，改造成可移植的 Skills、本地 processor 與外部 OpenAI-compatible 生圖 adapter。只要你的 AI 工具能載入 Skills，就可以在 OpenCode、Claude Code、Gemini CLI、Codex 或其他 agent runtime 中使用。
 </p>
 
 <p align="center">
@@ -24,7 +28,7 @@
 
 ## 這個 repo 解決什麼
 
-Agent Sprite Forge 不是單純的 prompt 集合。它是一組 agent-compatible 的 2D game asset workflow：agent 先決定資產規劃，OpenAI-compatible image provider 產生 raw visual，最後用 deterministic scripts 轉成真正可重用的遊戲素材。
+OhMyASF 不是單純的 prompt 集合。它保留 Agent Sprite Forge「讓 agent 產出可用遊戲素材」的目標，但把流程改成更通用的 agent-compatible 2D game asset workflow：agent 先決定資產規劃，OpenAI-compatible image provider 產生 raw visual，最後用 deterministic scripts 轉成真正可重用的遊戲素材。
 
 <table>
   <tr>
@@ -51,7 +55,7 @@ Agent Sprite Forge 不是單純的 prompt 集合。它是一組 agent-compatible
 
 ### Engine-Ready Prototypes
 
-這些範例都是用 agentic `agent-sprite-forge` workflow 做出的成果。重點不是單張圖，而是完整流程：生成素材、整理 scene data，並接到可玩的 prototype 或可編輯的 engine scene。
+這些範例都是用 agentic OhMyASF workflow 做出的成果。重點不是單張圖，而是完整流程：生成素材、整理 scene data，並接到可玩的 prototype 或可編輯的 engine scene。
 
 <table>
   <tr>
