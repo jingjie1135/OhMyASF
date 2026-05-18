@@ -14,16 +14,20 @@ from .errors import ConfigError
 ENV_BASE_URL = "AGENT_SPRITE_FORGE_IMAGEGEN_BASE_URL"
 ENV_API_KEY_ENV = "AGENT_SPRITE_FORGE_IMAGEGEN_API_KEY_ENV"
 ENV_SIZE_MODE = "AGENT_SPRITE_FORGE_IMAGEGEN_SIZE_MODE"
+DEFAULT_API_KEY_ENV = "OHMYASF_IMAGEGEN_API_KEY"
+DEFAULT_CONFIG_DIR = ".agent-sprite-forge"
+DEFAULT_CONFIG_FILENAME = "imagegen.json"
 RESERVED_PAYLOAD_KEYS = {"model", "prompt", "n", "size", "response_format"}
 
 
 @dataclass(frozen=True)
 class ImageGenConfig:
     base_url: str
-    api_key_env: str = "OPENAI_API_KEY"
+    api_key_env: str = DEFAULT_API_KEY_ENV
+    api_key_value: str | None = None
     provider: str = "openai_compatible"
     default_family: str = "firefly-gpt-image"
-    default_resolution: str = "1k"
+    default_resolution: str = "2k"
     default_ratio: str = "1x1"
     size_mode: str = "model_id"
     response_format: str = "b64_json"
@@ -34,6 +38,8 @@ class ImageGenConfig:
     def api_key(self, environ: Mapping[str, str] | None = None) -> str:
         env = os.environ if environ is None else environ
         value = env.get(self.api_key_env, "")
+        if not value and self.api_key_value:
+            value = self.api_key_value
         if not value:
             raise ConfigError(f"Missing API key in environment variable {self.api_key_env!r}")
         return value
@@ -52,9 +58,20 @@ def _load_json(path: Path) -> dict[str, object]:
     return data
 
 
-def load_config(path: str | Path, environ: Mapping[str, str] | None = None) -> ImageGenConfig:
+def default_config_path(environ: Mapping[str, str] | None = None) -> Path:
     env = os.environ if environ is None else environ
-    data = _load_json(Path(path))
+    home = env.get("USERPROFILE") or env.get("HOME")
+    if home:
+        return Path(home) / DEFAULT_CONFIG_DIR / DEFAULT_CONFIG_FILENAME
+    return Path.home() / DEFAULT_CONFIG_DIR / DEFAULT_CONFIG_FILENAME
+
+
+def load_config(path: str | Path | None, environ: Mapping[str, str] | None = None) -> ImageGenConfig:
+    env = os.environ if environ is None else environ
+    config_path = default_config_path(env) if path is None else Path(path)
+    if path is None and not config_path.exists():
+        raise ConfigError(f"Default imagegen config not found at {config_path}. Run `ohmyasf setup` first.")
+    data = _load_json(config_path)
 
     if ENV_BASE_URL in env:
         data["base_url"] = env[ENV_BASE_URL]
@@ -84,10 +101,11 @@ def load_config(path: str | Path, environ: Mapping[str, str] | None = None) -> I
 
     return ImageGenConfig(
         base_url=base_url,
-        api_key_env=str(data.get("api_key_env", "OPENAI_API_KEY")),
+        api_key_env=str(data.get("api_key_env", DEFAULT_API_KEY_ENV)),
+        api_key_value=str(data["api_key"]) if data.get("api_key") else None,
         provider=str(data.get("provider", "openai_compatible")),
         default_family=str(data.get("default_family", "firefly-gpt-image")),
-        default_resolution=str(data.get("default_resolution", "1k")),
+        default_resolution=str(data.get("default_resolution", "2k")),
         default_ratio=str(data.get("default_ratio", "1x1")),
         size_mode=str(data.get("size_mode", "model_id")),
         response_format=str(data.get("response_format", "b64_json")),

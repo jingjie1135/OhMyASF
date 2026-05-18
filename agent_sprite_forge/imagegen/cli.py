@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import argparse
+import getpass
+import json
 import os
 import time
 from pathlib import Path
-from typing import Sequence
+from typing import Mapping, Sequence
 from urllib.parse import urlsplit, urlunsplit
 
 from agent_sprite_forge import __version__
 
-from .config import load_config
+from .config import DEFAULT_API_KEY_ENV, default_config_path, load_config
 from .config import ImageGenConfig
 from .errors import ImageGenError, RequestValidationError
 from .io_utils import ensure_dir, write_json
@@ -24,6 +26,8 @@ def main(argv: Sequence[str] | None = None, environ: dict[str, str] | None = Non
     parser = build_parser()
     args = parser.parse_args(argv)
     env = os.environ if environ is None else environ
+    if args.command == "setup":
+        return setup(args, env)
     if args.command == "generate":
         return generate(args, env)
     parser.error("unknown command")
@@ -33,24 +37,52 @@ def main(argv: Sequence[str] | None = None, environ: dict[str, str] | None = Non
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="agent-sprite-forge-imagegen")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    setup_parser = subparsers.add_parser("setup", help="Configure the default OpenAI-compatible image provider")
+    setup_parser.add_argument("--base-url")
+    setup_parser.add_argument("--api-key")
     generate_parser = subparsers.add_parser("generate", help="Generate raw images through an OpenAI-compatible endpoint")
-    generate_parser.add_argument("--config", required=True, type=Path)
-    generate_parser.add_argument("--request", required=True, type=Path)
-    generate_parser.add_argument("--output-dir", required=True, type=Path)
+    generate_parser.add_argument("--run-dir", type=Path)
+    generate_parser.add_argument("--config", type=Path)
+    generate_parser.add_argument("--request", type=Path)
+    generate_parser.add_argument("--output-dir", type=Path)
     generate_parser.add_argument("--dry-run", action="store_true")
     return parser
 
 
-def generate(args: argparse.Namespace, environ: dict[str, str]) -> int:
+def setup(args: argparse.Namespace, environ: Mapping[str, str]) -> int:
+    config_path = default_config_path(environ)
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    base_url = args.base_url or input("OpenAI-compatible API base URL: ").strip()
+    api_key = args.api_key or getpass.getpass("API key: ").strip()
+    config = {
+        "provider": "openai_compatible",
+        "base_url": _normalize_base_url(base_url),
+        "api_key_env": DEFAULT_API_KEY_ENV,
+        "api_key": api_key,
+        "default_family": "firefly-gpt-image",
+        "default_resolution": "2k",
+        "default_ratio": "1x1",
+        "size_mode": "model_id",
+        "response_format": "b64_json",
+        "timeout_seconds": 120,
+    }
+    config_path.write_text(json.dumps(config, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"Imagegen config saved to {config_path}")
+    print(f"Stored API key in the default user config; {DEFAULT_API_KEY_ENV} can override it")
+    print(f"Endpoint: {endpoint_url(config['base_url'])}")
+    return 0
+
+
+def generate(args: argparse.Namespace, environ: Mapping[str, str]) -> int:
     started = time.perf_counter()
-    output_dir = ensure_dir(args.output_dir)
-    request_path = args.request
+    config_path, request_path, output_dir_path = _resolve_generate_paths(args)
+    output_dir = ensure_dir(output_dir_path)
     config: ImageGenConfig | None = None
     request: ImageGenRequest | None = None
     selection: ModelSelection | None = None
     warnings: list[str] = []
     try:
-        config = load_config(args.config, environ=environ)
+        config = load_config(config_path, environ=environ)
         request = load_request(request_path)
         warnings = _reference_warnings_or_error(request)
         selection = resolve_model(request, config)
@@ -93,7 +125,7 @@ def generate(args: argparse.Namespace, environ: dict[str, str]) -> int:
         return 0
     except ImageGenError as exc:
         manifest = _failure_manifest(
-            config_path=args.config,
+            config_path=config_path or default_config_path(environ),
             request_path=request_path,
             started=started,
             exc=exc,
@@ -105,6 +137,33 @@ def generate(args: argparse.Namespace, environ: dict[str, str]) -> int:
         )
         write_json(output_dir / "imagegen-manifest.json", manifest)
         return 1
+
+
+def _resolve_generate_paths(
+    args: argparse.Namespace,
+) -> tuple[Path | None, Path, Path]:
+    if args.run_dir is not None:
+        run_dir = args.run_dir
+        return (
+            args.config,
+            args.request or run_dir / "imagegen-request.json",
+            args.output_dir or run_dir / "raw",
+        )
+    missing = [name for name in ("config", "request", "output_dir") if getattr(args, name) is None]
+    if missing:
+        fields = ", ".join(f"--{name.replace('_', '-')}" for name in missing)
+        raise SystemExit(f"generate requires --run-dir or explicit {fields}")
+    return args.config, args.request, args.output_dir
+
+
+def _normalize_base_url(value: str) -> str:
+    text = value.strip()
+    if "://" not in text:
+        text = f"https://{text}"
+    text = text.rstrip("/")
+    if text.endswith("/v1"):
+        return text
+    return f"{text}/v1"
 
 
 def _manifest(

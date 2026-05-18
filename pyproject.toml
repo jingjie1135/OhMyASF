@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 agent-sprite-forge-imagegen = "agent_sprite_forge.imagegen.cli:main"
+ohmyasf = "agent_sprite_forge.imagegen.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["agent_sprite_forge*"]
