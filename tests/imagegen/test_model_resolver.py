@@ -24,10 +24,20 @@ class ModelResolverTests(unittest.TestCase):
 
         selection = resolve_model(request, self.config)
 
-        self.assertEqual(selection.model, "firefly-gpt-image-1k-1x1")
+        self.assertEqual(selection.model, "firefly-gpt-image-2k-1x1")
         self.assertEqual(selection.ratio, "1x1")
         self.assertEqual(selection.sent_size, None)
         self.assertEqual(selection.size_mode, "model_id")
+
+    def test_simple_small_asset_roles_route_to_one_k(self) -> None:
+        for role in ["item_icon", "ui_icon", "portrait", "headshot", "simple_projectile", "simple_impact", "simple_fx", "tiny_prop"]:
+            with self.subTest(role=role):
+                request = ImageGenRequest.from_dict({"prompt": f"{role} asset", "asset_role": role})
+
+                selection = resolve_model(request, self.config)
+
+                self.assertEqual(selection.model, "firefly-gpt-image-1k-1x1")
+                self.assertIn("simple", selection.reason)
 
     def test_high_value_player_sheet_uses_higher_resolution_square_model(self) -> None:
         request = ImageGenRequest.from_dict(
@@ -46,8 +56,17 @@ class ModelResolverTests(unittest.TestCase):
 
         selection = resolve_model(request, self.config)
 
-        self.assertEqual(selection.model, "firefly-gpt-image-2k-16x9")
+        self.assertEqual(selection.model, "firefly-gpt-image-4k-16x9")
         self.assertEqual(selection.ratio, "16x9")
+
+    def test_large_map_roles_route_to_four_k_widescreen(self) -> None:
+        for role in ["map_base", "dressed_reference", "tileset", "side_scroll_layer", "parallax_layer"]:
+            with self.subTest(role=role):
+                request = ImageGenRequest.from_dict({"prompt": f"{role} map asset", "asset_role": role})
+
+                selection = resolve_model(request, self.config)
+
+                self.assertEqual(selection.model, "firefly-gpt-image-4k-16x9")
 
     def test_wide_platform_strips_fallback_to_family_that_supports_wide_ratios(self) -> None:
         request = ImageGenRequest.from_dict(
@@ -84,7 +103,7 @@ class ModelResolverTests(unittest.TestCase):
             }
         )
         selection = resolve_model(request, self.config)
-        self.assertEqual(selection.sent_size, "2048x1152")
+        self.assertEqual(selection.sent_size, "4096x2304")
 
         explicit = resolve_model(
             ImageGenRequest.from_dict(
@@ -97,6 +116,52 @@ class ModelResolverTests(unittest.TestCase):
             self.config,
         )
         self.assertEqual(explicit.sent_size, "1024x1024")
+
+    def test_dense_five_by_five_and_six_by_six_grids_route_to_four_k(self) -> None:
+        for rows, cols in [(5, 5), (6, 6)]:
+            with self.subTest(rows=rows, cols=cols):
+                request = ImageGenRequest.from_dict(
+                    {
+                        "prompt": f"dense {rows}x{cols} attack sheet",
+                        "asset_role": "sprite_sheet",
+                        "model_policy": {"grid_rows": str(rows), "grid_cols": str(cols)},
+                    }
+                )
+
+                selection = resolve_model(request, self.config)
+
+                self.assertEqual(selection.model, "firefly-gpt-image-4k-1x1")
+                self.assertIn("dense", selection.reason)
+
+    def test_explicit_quality_override_wins_over_role_policy_resolution(self) -> None:
+        final_icon = ImageGenRequest.from_dict(
+            {"prompt": "premium icon", "asset_role": "ui_icon", "quality": "final"}
+        )
+        draft_map = ImageGenRequest.from_dict(
+            {"prompt": "cheap map draft", "asset_role": "map_base", "quality": "draft"}
+        )
+
+        final_icon_selection = resolve_model(final_icon, self.config)
+        draft_map_selection = resolve_model(draft_map, self.config)
+
+        self.assertEqual(final_icon_selection.model, "firefly-gpt-image-4k-1x1")
+        self.assertIn("quality=final", final_icon_selection.reason)
+        self.assertEqual(draft_map_selection.model, "firefly-nano-banana2-1k-16x9")
+        self.assertIn("quality=draft", draft_map_selection.reason)
+
+    def test_explicit_quality_override_wins_over_config_routing(self) -> None:
+        config = ImageGenConfig(
+            base_url="https://new.example.com/v1",
+            routing={"ui_icon": {"family": "firefly-gpt-image", "resolution": "1k", "ratio": "1x1"}},
+        )
+        request = ImageGenRequest.from_dict(
+            {"prompt": "premium icon", "asset_role": "ui_icon", "quality": "final"}
+        )
+
+        selection = resolve_model(request, config)
+
+        self.assertEqual(selection.model, "firefly-gpt-image-4k-1x1")
+        self.assertIn("quality=final", selection.reason)
 
 
 if __name__ == "__main__":

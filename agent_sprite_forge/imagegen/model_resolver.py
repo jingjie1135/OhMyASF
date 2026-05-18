@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from typing import Mapping
-
 from .config import ImageGenConfig
 from .errors import ModelResolutionError
 from .model_catalog import is_valid_model_id, is_video_model_id, model_id, parse_model_id, supports
@@ -14,9 +12,28 @@ from .schema import ImageGenRequest
 
 QUALITY_PROFILES: dict[str, tuple[str, str]] = {
     "draft": ("firefly-nano-banana2", "1k"),
-    "standard": ("firefly-gpt-image", "1k"),
+    "standard": ("firefly-gpt-image", "2k"),
     "high": ("firefly-gpt-image", "2k"),
     "final": ("firefly-gpt-image", "4k"),
+}
+
+SIMPLE_SMALL_ROLES = {
+    "item_icon",
+    "ui_icon",
+    "portrait",
+    "headshot",
+    "simple_projectile",
+    "simple_impact",
+    "simple_fx",
+    "tiny_prop",
+}
+
+LARGE_WIDESCREEN_ROLES = {
+    "map_base",
+    "dressed_reference",
+    "tileset",
+    "side_scroll_layer",
+    "parallax_layer",
 }
 
 DERIVED_SIZES: dict[tuple[str, str], str] = {
@@ -106,6 +123,10 @@ def _route(request: ImageGenRequest, config: ImageGenConfig) -> tuple[str, str, 
     quality = request.quality.lower()
     family, resolution = QUALITY_PROFILES.get(quality, (config.default_family, config.default_resolution))
     ratio = config.default_ratio
+    quality_overrides_resolution = request.quality_explicit and quality != "standard" and quality in QUALITY_PROFILES
+
+    if quality_overrides_resolution:
+        return family, resolution, _policy_ratio(role, map_mode, ratio), f"explicit quality={quality} override"
 
     if role in config.routing:
         override = config.routing[role]
@@ -116,22 +137,56 @@ def _route(request: ImageGenRequest, config: ImageGenConfig) -> tuple[str, str, 
             f"routing override for asset_role={role}",
         )
 
+    if _is_dense_grid(request):
+        return "firefly-gpt-image", "4k", "1x1", "dense 5x5/6x6 grid requires 4K sheet detail"
+    if role in SIMPLE_SMALL_ROLES:
+        return "firefly-gpt-image", "1k", "1x1", f"simple small asset_role={role} uses 1K"
     if role in {"player_sheet", "hero_sheet", "boss_sheet"}:
         return "firefly-gpt-image", "2k", "1x1", f"{role} requires dense square sheet detail"
     if role in {"prop_pack", "compact_prop_pack"}:
         return "firefly-gpt-image", "2k", "1x1", "compact prop packs use square grids"
     if role in {"platform_strip", "wide_strip", "bridge", "long_hazard"}:
         return "firefly-nano-banana2", "1k", "4x1", "wide strips need a family with 4x1/8x1 support"
-    if role in {"side_scroll_layer", "parallax_layer"} or map_mode == "side_scroll_mode":
-        return "firefly-gpt-image", "2k", "16x9", "side_scroll_mode uses a 16x9 stage canvas"
+    if role in LARGE_WIDESCREEN_ROLES or map_mode == "side_scroll_mode":
+        return "firefly-gpt-image", "4k", "16x9", "large map/stage assets use a 4K widescreen canvas"
     if role in {"mobile_background", "portrait_map"} or map_mode in {"mobile_portrait", "portrait"}:
         return "firefly-gpt-image", "2k", "9x16", "portrait gameplay scenes use 9x16"
     if role in {"tall_map", "route_map"} or map_mode == "tall_route":
         return "firefly-gpt-image", "2k", "3x4", "tall route maps use 3x4"
-    if role in {"map_base", "dressed_reference", "tileset"}:
-        return "firefly-gpt-image", "2k", "16x9", "standard maps default to widescreen framing"
 
     return family, resolution, ratio, "default square image routing"
+
+
+def _policy_ratio(role: str, map_mode: str, default_ratio: str) -> str:
+    if role in LARGE_WIDESCREEN_ROLES or map_mode == "side_scroll_mode":
+        return "16x9"
+    if role in {"mobile_background", "portrait_map"} or map_mode in {"mobile_portrait", "portrait"}:
+        return "9x16"
+    if role in {"tall_map", "route_map"} or map_mode == "tall_route":
+        return "3x4"
+    if role in {"platform_strip", "wide_strip", "bridge", "long_hazard"}:
+        return "4x1"
+    return default_ratio
+
+
+def _is_dense_grid(request: ImageGenRequest) -> bool:
+    rows = _int_hint(request, "grid_rows")
+    cols = _int_hint(request, "grid_cols")
+    if rows is None or cols is None:
+        return False
+    return rows >= 5 and cols >= 5
+
+
+def _int_hint(request: ImageGenRequest, key: str) -> int | None:
+    for source in (request.model_policy, request.constraints):
+        value = source.get(key)
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+    return None
 
 
 def _fallback(family: str, resolution: str, ratio: str, reason: str) -> tuple[str, str, str, str]:

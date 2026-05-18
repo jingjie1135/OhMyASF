@@ -3,7 +3,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from agent_sprite_forge.imagegen.config import ImageGenConfig, load_config
+from agent_sprite_forge.imagegen.config import (
+    DEFAULT_API_KEY_ENV,
+    default_config_path,
+    ImageGenConfig,
+    load_config,
+)
 from agent_sprite_forge.imagegen.errors import RequestValidationError
 from agent_sprite_forge.imagegen.schema import ImageGenRequest
 
@@ -87,11 +92,46 @@ class ConfigSchemaTests(unittest.TestCase):
         config = ImageGenConfig(base_url="https://new.example.com/v1")
 
         self.assertEqual(config.provider, "openai_compatible")
-        self.assertEqual(config.api_key_env, "OPENAI_API_KEY")
+        self.assertEqual(config.api_key_env, DEFAULT_API_KEY_ENV)
         self.assertEqual(config.default_family, "firefly-gpt-image")
-        self.assertEqual(config.default_resolution, "1k")
+        self.assertEqual(config.default_resolution, "2k")
         self.assertEqual(config.default_ratio, "1x1")
         self.assertEqual(config.size_mode, "model_id")
+
+    def test_default_config_path_uses_user_home(self) -> None:
+        path = default_config_path({"USERPROFILE": "C:/Users/TestUser"})
+
+        self.assertEqual(path, Path("C:/Users/TestUser") / ".agent-sprite-forge" / "imagegen.json")
+
+    def test_load_config_without_path_uses_default_location(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config_path = root / ".agent-sprite-forge" / "imagegen.json"
+            config_path.parent.mkdir(parents=True)
+            config_path.write_text(json.dumps({"base_url": "https://new.example.com/v1"}), encoding="utf-8")
+
+            config = load_config(None, environ={"USERPROFILE": str(root)})
+
+        self.assertEqual(config.base_url, "https://new.example.com/v1")
+        self.assertEqual(config.api_key_env, DEFAULT_API_KEY_ENV)
+
+    def test_config_can_store_setup_api_key_with_env_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "base_url": "https://new.example.com/v1",
+                        "api_key": "stored-secret",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            config = load_config(config_path, environ={})
+
+        self.assertEqual(config.api_key({}), "stored-secret")
+        self.assertEqual(config.api_key({DEFAULT_API_KEY_ENV: "env-secret"}), "env-secret")
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ class ImageGenRequest:
     asset_role: str | None = None
     map_mode: str | None = None
     quality: str = "standard"
+    quality_explicit: bool = False
     negative_prompt: str | None = None
     n: int = 1
     output_name: str = "generated-image"
@@ -60,6 +61,7 @@ class ImageGenRequest:
             asset_role=_optional_str(data.get("asset_role")),
             map_mode=_optional_str(data.get("map_mode")),
             quality=str(data.get("quality", "standard")),
+            quality_explicit="quality" in data,
             prompt=prompt,
             negative_prompt=_optional_str(data.get("negative_prompt")),
             n=n,
