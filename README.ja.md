@@ -1,17 +1,21 @@
-# Agent Sprite Forge
+# OhMyASF
 
 言語：[English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 <p align="center">
-  <img src="./src/banner.png" alt="Agent Sprite Forge banner" width="900" />
+  <img src="./src/banner.png" alt="OhMyASF banner" width="900" />
 </p>
 
 <p align="center">
-  <strong>汎用 agent 向けの 2D ゲームアセット Skill。OpenAI-compatible 画像生成エンドポイントで、ゲームで使えるスプライト、レイヤー化されたマップ、エンジンへ渡せるプロトタイプ素材を生成します。</strong>
+  <strong>Skills を読み込める任意の AI agent 向けの 2D ゲームアセット workflow。OpenAI-compatible 画像生成エンドポイントで、ゲームで使えるスプライト、レイヤー化されたマップ、エンジンへ渡せるプロトタイプ素材を生成します。</strong>
 </p>
 
 <p align="center">
   自然言語で依頼すると、agent がアセット制作パイプラインを設計し、new-api / One-API / LiteLLM 互換の OpenAI-compatible 画像生成エンドポイントで元画像を作り、ローカル処理で背景除去、フレーム分割、整列、検証、Godot / Unity / 通常の 2D ゲーム向けエクスポートを行います。
+</p>
+
+<p align="center">
+  OhMyASF は Agent Sprite Forge をベースにした発展版ですが、現在の主ブランドは OhMyASF です。元の Codex-first な流れを、移植可能な Skills、ローカル処理、外部 OpenAI-compatible 画像 adapter の組み合わせに変更しています。
 </p>
 
 <p align="center">
@@ -24,7 +28,7 @@
 
 ## 何が違うのか
 
-Agent Sprite Forge は単なる prompt 集ではありません。agent-compatible な 2D ゲームアセット制作ワークフローです。Agent が必要なアセットと手順を判断し、OpenAI-compatible image provider がビジュアルを作り、決定論的なローカルスクリプトが再利用可能なゲーム素材へ整えます。
+OhMyASF は単なる prompt 集ではありません。Agent Sprite Forge の「agent がゲーム素材を作る」という目的を保ちつつ、より汎用的な agent-compatible 2D ゲームアセット制作ワークフローにしたものです。Agent が必要なアセットと手順を判断し、OpenAI-compatible image provider がビジュアルを作り、決定論的なローカルスクリプトが再利用可能なゲーム素材へ整えます。
 
 <table>
   <tr>
@@ -39,7 +43,7 @@ Agent Sprite Forge は単なる prompt 集ではありません。agent-compatib
 
 ### Engine-Ready Prototypes
 
-以下は agentic な `agent-sprite-forge` workflow で組み立てた例です。生成アセット、構造化されたシーンデータ、実際に遊べる prototype wiring までを示します。
+以下は agentic な OhMyASF workflow で組み立てた例です。生成アセット、構造化されたシーンデータ、実際に遊べる prototype wiring までを示します。
 
 <table>
   <tr>
