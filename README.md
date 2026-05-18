@@ -200,29 +200,22 @@ cp -R ./skills/* ~/.codex/skills/
 
 Agent Sprite Forge 使用单一 OpenAI-compatible 端点生成 raw image，可接入 new-api、One-API、LiteLLM 风格网关，或任何实现 `/v1/images/generations` 的 provider。
 
-1. 复制 [`configs/imagegen.openai-compatible.example.json`](./configs/imagegen.openai-compatible.example.json) 为自己的配置。
-2. 将 `base_url` 改成网关地址，通常包含 `/v1`。
-3. 将 `api_key_env` 改成保存 API key 的环境变量名。
-4. live run 前导出对应 key。
+安装后运行一次 setup，输入网关地址和 API key。CLI 会把默认配置写入用户目录下的 `.agent-sprite-forge/imagegen.json`，并保存 API key；如果你更希望用环境变量管理密钥，也可以用固定变量名 `OHMYASF_IMAGEGEN_API_KEY` 覆盖配置中的 key。
 
 ```bash
-export NEW_API_KEY="sk-..."
-agent-sprite-forge-imagegen generate \
-  --config configs/imagegen.openai-compatible.example.json \
-  --request examples/imagegen/sprite-2x2-idle.request.json \
-  --output-dir outputs/imagegen-smoke/sprite
+ohmyasf setup
 ```
+
+按提示输入 API 地址和 KEY。自动化脚本也可以使用 `--base-url` / `--api-key`，但真实密钥不建议直接写进 shell history。
 
 ### 2. 先执行 dry-run
 
-先用 `--dry-run` 验证 request 解析、模型选择、路由和 manifest 写入，不消耗 provider 额度：
+先在一个 run directory 写入 `imagegen-request.json`，再用 `--dry-run` 验证 request 解析、模型选择、路由和 manifest 写入，不消耗 provider 额度。正常模式只需要传 `--run-dir`，CLI 会自动使用默认配置、读取 `<run-dir>/imagegen-request.json`，并把 manifest 写到 `<run-dir>/raw/imagegen-manifest.json`。
 
 ```bash
-agent-sprite-forge-imagegen generate \
-  --config configs/imagegen.openai-compatible.example.json \
-  --request examples/imagegen/map-side-scroll-16x9.request.json \
-  --output-dir outputs/imagegen-smoke/map \
-  --dry-run
+mkdir -p outputs/imagegen-smoke/sprite
+cp examples/imagegen/sprite-2x2-idle.request.json outputs/imagegen-smoke/sprite/imagegen-request.json
+ohmyasf generate --run-dir outputs/imagegen-smoke/sprite --dry-run
 ```
 
 ### 3. 在 agent 中调用 skill
@@ -237,7 +230,7 @@ Use $generate2dsprite to create a 3x3 idle for an ultimate earth titan.
 Use $generate2dmap to create a Godot-editable RPG map with separated props, encounter grass Area2D zones, collision StaticBody2D blockers, exit zones, and a debug player scene.
 ```
 
-如果你只是想调试底层适配器，而不是整条 skill 工作流，也可以直接构造 `imagegen-request.json` 后运行 `agent-sprite-forge-imagegen generate`。
+如果你只是想调试底层适配器，而不是整条 skill 工作流，也可以直接构造 `imagegen-request.json` 后运行 `ohmyasf generate --run-dir <run-dir>`。高级调试场景仍保留旧的显式参数：`agent-sprite-forge-imagegen generate --config ... --request ... --output-dir ...`。
 
 live smoke test 会消耗 provider 额度，不属于普通单元测试。
 
@@ -245,7 +238,10 @@ live smoke test 会消耗 provider 额度，不属于普通单元测试。
 
 Adapter 不固定单一模型，因为 sprite sheet 和地图需要不同宽高比。默认使用 `{family}-{resolution}-{ratio}` 形式的 Firefly 图片模型 ID，并把最终选择写入 `imagegen-manifest.json`。
 
-- 标准 sprite sheet：`firefly-gpt-image-1k-1x1`
+- 标准 sprite sheet：默认 `firefly-gpt-image-2k-1x1`
+- 简单小图（物品图标、UI 图标、头像、简单 projectile/impact/FX、小型 prop）：`firefly-gpt-image-1k-1x1`
+- 大背景、地图 base、dressed reference、tileset、side-scroll / parallax layer：默认 `firefly-gpt-image-4k-16x9`
+- 高密度 `5x5` / `6x6` sheet：`firefly-gpt-image-4k-1x1`
 - 高价值主角或密集 `4x4` sheet：`firefly-gpt-image-2k-1x1`
 - compact prop pack：方形 `1x1` 模型
 - side-scroll parallax layer / stage reference：`16x9` 模型
@@ -302,6 +298,7 @@ Use $generate2dmap to create a playable side_scroll_mode platformer stage with p
 ## Notes
 
 - 最好的结果来自明确指定视角、动作和动作节奏的 prompt。
+- 对 sprite 后处理，agent 通常仍应根据资源类型、目标引擎和交付尺寸主动传 `--cell-size`。如果漏传，处理器现在会保留原图每格分辨率作为安全兜底，而不是再自动压缩到旧的 96 / 128 小格子。
 - 大型 creature 通常更适合 `3x3 idle`。
 - 小型 spell、projectile 和 impact 通常适合 `2x2` 或 `2x3`。
 - 主角攻击、射击、施法动作建议 body-only；大范围 slash、muzzle flash、projectile、impact 独立生成成 FX。

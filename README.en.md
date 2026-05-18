@@ -444,27 +444,20 @@ Start a new agent session after installation so the skills are loaded cleanly.
 
 Agent Sprite Forge uses one OpenAI-compatible endpoint for raw image generation. This works with new-api, One-API, LiteLLM-style gateways, or any provider that implements `/v1/images/generations`.
 
-1. Copy [`configs/imagegen.openai-compatible.example.json`](./configs/imagegen.openai-compatible.example.json) to your own config file.
-2. Set `base_url` to the gateway root, usually including `/v1`.
-3. Set `api_key_env` to the environment variable that stores your key.
-4. Export the key before a live run.
+Run setup once after installation and provide only the gateway URL and API key. The CLI writes the default config to `.agent-sprite-forge/imagegen.json` under your user home and stores the API key there. If you prefer environment-managed secrets, the stable `OHMYASF_IMAGEGEN_API_KEY` variable overrides the stored key.
 
 ```bash
-export NEW_API_KEY="sk-..."
-agent-sprite-forge-imagegen generate \
-  --config configs/imagegen.openai-compatible.example.json \
-  --request examples/imagegen/sprite-2x2-idle.request.json \
-  --output-dir outputs/imagegen-smoke/sprite
+ohmyasf setup
 ```
 
-Use `--dry-run` first to verify request loading, routing, and manifest writing without spending provider credits:
+Follow the prompts for the API URL and key. Automation can still pass `--base-url` / `--api-key`, but avoid putting real keys directly into shell history.
+
+Use `--dry-run` first to verify request loading, routing, and manifest writing without spending provider credits. In the normal path, write `imagegen-request.json` into one run directory and pass only `--run-dir`; the CLI uses the default config, reads `<run-dir>/imagegen-request.json`, and writes `<run-dir>/raw/imagegen-manifest.json`.
 
 ```bash
-agent-sprite-forge-imagegen generate \
-  --config configs/imagegen.openai-compatible.example.json \
-  --request examples/imagegen/map-side-scroll-16x9.request.json \
-  --output-dir outputs/imagegen-smoke/map \
-  --dry-run
+mkdir -p outputs/imagegen-smoke/sprite
+cp examples/imagegen/sprite-2x2-idle.request.json outputs/imagegen-smoke/sprite/imagegen-request.json
+ohmyasf generate --run-dir outputs/imagegen-smoke/sprite --dry-run
 ```
 
 Live smoke tests consume provider credits and are not part of the unit test suite.
@@ -473,7 +466,10 @@ Live smoke tests consume provider credits and are not part of the unit test suit
 
 The adapter does not hardcode one model because sprites and maps need different aspect ratios. By default it uses Firefly image model IDs in the form `{family}-{resolution}-{ratio}` and records the selected model in `imagegen-manifest.json`.
 
-- Standard sprite sheets: `firefly-gpt-image-1k-1x1`
+- Standard sprite sheets: default `firefly-gpt-image-2k-1x1`
+- Simple small assets such as item icons, UI icons, portraits, simple projectile/impact/FX assets, and tiny props: `firefly-gpt-image-1k-1x1`
+- Large backgrounds, map bases, dressed references, tilesets, side-scroll layers, and parallax layers: default `firefly-gpt-image-4k-16x9`
+- High-density `5x5` / `6x6` sheets: `firefly-gpt-image-4k-1x1`
 - High-value hero or dense `4x4` sheets: `firefly-gpt-image-2k-1x1`
 - Compact prop packs: square `1x1` models
 - Side-scroll parallax layers and stage references: `16x9` models
@@ -595,6 +591,7 @@ For a map output, the result depends on the chosen pipeline:
 ## Notes
 
 - Best results come from prompts that clearly specify view, action, and desired motion style.
+- For sprite postprocessing, the agent should still choose `--cell-size` deliberately based on asset type, target engine, and delivery size. If it is omitted by mistake, the processor now preserves the source per-cell resolution as a safety fallback instead of shrinking frames to the old 96 / 128 defaults.
 - Large creatures often work better as `3x3 idle`.
 - Small spells and projectiles often work better as `1x4`, `2x2`, or `2x3`.
 - Layout guides are useful for fixed-frame action sheets and prop packs, but they are not always better for compact attack sheets.

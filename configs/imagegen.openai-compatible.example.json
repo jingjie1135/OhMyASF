@@ -1,9 +1,9 @@
 {
   "provider": "openai_compatible",
   "base_url": "https://new-api.example.com/v1",
-  "api_key_env": "NEW_API_KEY",
+  "api_key_env": "OHMYASF_IMAGEGEN_API_KEY",
   "default_family": "firefly-gpt-image",
-  "default_resolution": "1k",
+  "default_resolution": "2k",
   "default_ratio": "1x1",
   "size_mode": "model_id",
   "response_format": "b64_json",
