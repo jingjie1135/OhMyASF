@@ -39,12 +39,13 @@ Read [references/modes.md](references/modes.md) when the request is ambiguous.
 - For controllable heroes, main characters, and high-value player body actions, default attack/shoot/cast body sheets to body-only. Do not include large slash arcs, muzzle flashes, projectiles, impact bursts, detached dust, long trails, or wide detached FX in the body sheet. Generate those as separate `fx`, `projectile`, or `impact` sheets and layer them in the game.
 - Only include wide attack FX in the same raw body sheet when the target runtime explicitly supports wider per-action cells plus per-action origin/anchor metadata. Otherwise, a wide FX bbox will force the body to shrink inside the fixed cell.
 - Write the art prompt yourself. Do not default to the prompt-builder script.
-- Use `agent-sprite-forge-imagegen generate` for every raw image unless the user explicitly selects existing art or procedural placeholders. The raw image path must come from `imagegen-manifest.json`.
+- Use `ohmyasf generate --run-dir <run-dir>` for every raw image unless the user explicitly selects existing art or procedural placeholders. The raw image path must come from `<run-dir>/raw/imagegen-manifest.json`.
 - Do not create raw sprite art with Three.js, Canvas, SVG, HTML/CSS drawing, PIL shape drawing, procedural geometry, placeholder primitives, or code-rendered screenshots. Runtime code may display finished generated assets, and scripts may make layout guides or postprocess generated images, but requested sprite art must originate from the configured image generation provider through the imagegen CLI.
 - The first adapter path is text-to-image only. When the user provides or implies a visual reference, record the intended role (`identity_style`, `layout_only`, or `map_style`) in `imagegen-request.json` / run notes, translate preferred references into explicit text constraints, and fail clearly before generation if the request requires provider-native reference preservation.
 - Do not force pixel art when the asset is a map prop for `$generate2dmap` or when the user/project requests a different style. Match the map or reference style first.
 - Use the script only as a deterministic processor: magenta cleanup, frame splitting, component filtering, scaling, alignment, QC metadata, transparent sheet export, and GIF export.
 - Do not use scripts to generate the creative image prompt. If a legacy prompt-builder command exists, treat it as historical compatibility only, not the normal skill workflow.
+- Choose `--cell-size` deliberately based on asset type, target runtime, and expected delivery size. When `--cell-size` is accidentally omitted, the processor uses a safe fallback: it preserves the generated sheet's original per-cell dimensions and only slices/cleans/transparently exports the grid instead of shrinking frames to legacy 96/128 defaults.
 - Layout guides are allowed only as deterministic geometry references for image generation. They may show slot count, spacing, centering, and safe padding, but must never define the creative art direction.
 - Treat script flags as execution primitives chosen by the agent, not user-facing hardcoded workflow.
 - If a generated sheet touches cell edges, drifts in scale, or breaks a projectile / impact loop, either reprocess with better primitive settings or regenerate the raw sheet.
@@ -163,13 +164,10 @@ Use layout guides deliberately:
 
 ### 3. Generate the raw image
 
-Write an `imagegen-request.json` in the run directory and run the configured OpenAI-compatible adapter:
+Write an `imagegen-request.json` in the run directory and run the configured OpenAI-compatible adapter. Normal workflow uses the default user config created by `ohmyasf setup`; do not search for a provider config path during generation.
 
 ```bash
-agent-sprite-forge-imagegen generate \
-  --config <repo-or-user-config>/imagegen.openai-compatible.json \
-  --request <run-dir>/imagegen-request.json \
-  --output-dir <run-dir>/raw
+ohmyasf generate --run-dir <run-dir>
 ```
 
 For dry-run validation before spending provider credits, add `--dry-run` and inspect the selected model in `<run-dir>/raw/imagegen-manifest.json`.
@@ -177,7 +175,8 @@ For dry-run validation before spending provider credits, add `--dry-run` and ins
 Request guidance:
 
 - Use `asset_role: "sprite_sheet"` for standard action grids and `asset_role: "player_sheet"` for dense `4x4` four-direction player sheets.
-- Keep sprite sheets and compact prop packs on square models (`1x1`) by default. Use higher quality/resolution for high-value heroes, dense `3x3` or `4x4` sheets, and final assets.
+- Resolution policy is deterministic: normal sprite sheets default to 2K; simple small assets (`item_icon`, `ui_icon`, `portrait`, `headshot`, `simple_projectile`, `simple_impact`, `simple_fx`, `tiny_prop`) route to 1K; dense `5x5`/`6x6` sheets route to 4K. Add `model_policy.grid_rows` and `model_policy.grid_cols` when requesting a dense grid so the resolver can select 4K without guessing.
+- Keep sprite sheets and compact prop packs on square models (`1x1`) by default. Use explicit `model` only when overriding the resolver for expert/debug reasons.
 - Set `output_name` to a stable slug such as `raw-sheet`, `idle-raw`, or `player-sheet-raw`.
 - Put prompt, negative prompt, optional reference descriptors, and any provider-specific options in the request file rather than relying on conversation-only state.
 
@@ -196,6 +195,7 @@ Run `scripts/generate2dsprite.py process` on the raw image.
 The processor is intentionally low-level. The agent chooses:
 
 - `rows` / `cols`
+- the intended `--cell-size` for the asset type and target runtime; if it is omitted accidentally, the processor preserves source cell resolution as a fallback rather than resizing to legacy small cells
 - `fit_scale`
 - `align`
 - `shared_scale`
