@@ -551,7 +551,7 @@ def split_grid(
     img: Image.Image,
     rows: int,
     cols: int,
-    cell_size: int,
+    cell_size: int | None,
     threshold: int,
     edge_threshold: int,
     fit_scale: float = 0.85,
@@ -567,6 +567,9 @@ def split_grid(
     cleaned = remove_bg_magenta(img.convert("RGBA"), threshold, edge_threshold)
     width, height = cleaned.size
     cell_width, cell_height = width // cols, height // rows
+    preserve_source_cells = cell_size is None
+    output_cell_width = cell_width if preserve_source_cells else cell_size
+    output_cell_height = cell_height if preserve_source_cells else cell_size
     cropped_frames: list[Image.Image] = []
     frame_info: list[dict[str, object]] = []
     for row in range(rows):
@@ -602,27 +605,30 @@ def split_grid(
             )
 
     common_scale = None
-    if shared_scale:
+    if shared_scale and not preserve_source_cells:
         max_width = max((frame.size[0] for frame in cropped_frames), default=0)
         max_height = max((frame.size[1] for frame in cropped_frames), default=0)
         if max_width > 0 and max_height > 0:
-            common_scale = min(cell_size / max_width, cell_size / max_height) * fit_scale
+            common_scale = min(output_cell_width / max_width, output_cell_height / max_height) * fit_scale
 
     frames: list[Image.Image] = []
     for index, frame in enumerate(cropped_frames):
         frame_width, frame_height = frame.size
-        canvas = Image.new("RGBA", (cell_size, cell_size), (0, 0, 0, 0))
+        canvas = Image.new("RGBA", (output_cell_width, output_cell_height), (0, 0, 0, 0))
         if frame_width > 0 and frame_height > 0:
-            scale = common_scale or (min(cell_size / frame_width, cell_size / frame_height) * fit_scale)
-            new_width = max(1, int(frame_width * scale))
-            new_height = max(1, int(frame_height * scale))
-            frame = frame.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            paste_x = (cell_size - new_width) // 2
-            if align in {"bottom", "feet"}:
-                pad = max(0, int(cell_size * (1 - fit_scale) * 0.5))
-                paste_y = cell_size - new_height - pad
+            if preserve_source_cells:
+                new_width, new_height = frame_width, frame_height
             else:
-                paste_y = (cell_size - new_height) // 2
+                scale = common_scale or (min(output_cell_width / frame_width, output_cell_height / frame_height) * fit_scale)
+                new_width = max(1, int(frame_width * scale))
+                new_height = max(1, int(frame_height * scale))
+                frame = frame.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            paste_x = (output_cell_width - new_width) // 2
+            if align in {"bottom", "feet"}:
+                pad = 0 if preserve_source_cells else max(0, int(output_cell_height * (1 - fit_scale) * 0.5))
+                paste_y = output_cell_height - new_height - pad
+            else:
+                paste_y = (output_cell_height - new_height) // 2
             canvas.paste(frame, (paste_x, paste_y))
             frame_info[index]["output_size"] = [new_width, new_height]
             frame_info[index]["paste_position"] = [paste_x, paste_y]
@@ -633,11 +639,14 @@ def split_grid(
     return frames, frame_info
 
 
-def compose_sheet(frames: list[Image.Image], rows: int, cols: int, cell_size: int) -> Image.Image:
-    canvas = Image.new("RGBA", (cols * cell_size, rows * cell_size), (0, 0, 0, 0))
+def compose_sheet(
+    frames: list[Image.Image], rows: int, cols: int, cell_width: int, cell_height: int | None = None
+) -> Image.Image:
+    output_cell_height = cell_height if cell_height is not None else cell_width
+    canvas = Image.new("RGBA", (cols * cell_width, rows * output_cell_height), (0, 0, 0, 0))
     for index, frame in enumerate(frames):
         row, col = divmod(index, cols)
-        canvas.paste(frame, (col * cell_size, row * cell_size), frame)
+        canvas.paste(frame, (col * cell_width, row * output_cell_height), frame)
     return canvas
 
 
@@ -774,7 +783,11 @@ def cmd_process(args: argparse.Namespace) -> None:
             rows, cols = args.rows, args.cols
         else:
             rows, cols = GRID_SHAPES[args.mode]
-        cell_size = args.cell_size or (96 if (rows, cols) == (4, 4) else 128)
+        source_cell_width = raw.width // cols
+        source_cell_height = raw.height // rows
+        explicit_cell_size = args.cell_size is not None
+        output_cell_width = args.cell_size if explicit_cell_size else source_cell_width
+        output_cell_height = args.cell_size if explicit_cell_size else source_cell_height
         raw.save(out_dir / "raw-sheet.png")
         cleaned = remove_bg_magenta(raw.copy(), args.threshold, args.edge_threshold)
         cleaned.save(out_dir / "raw-sheet-clean.png")
@@ -783,7 +796,7 @@ def cmd_process(args: argparse.Namespace) -> None:
             raw,
             rows,
             cols,
-            cell_size,
+            args.cell_size,
             args.threshold,
             args.edge_threshold,
             fit_scale=args.fit_scale,
@@ -804,13 +817,13 @@ def cmd_process(args: argparse.Namespace) -> None:
         for label, frame in zip(labels, frames):
             frame.save(out_dir / f"{label}.png")
 
-        compose_sheet(frames, rows, cols, cell_size).save(out_dir / "sheet-transparent.png")
+        compose_sheet(frames, rows, cols, output_cell_width, output_cell_height).save(out_dir / "sheet-transparent.png")
 
         if args.mode == "player_sheet" and not has_custom_grid and (rows, cols) == (4, 4):
             directions = ["down", "left", "right", "up"]
             for row_index, direction in enumerate(directions):
                 row_frames = frames[row_index * cols : (row_index + 1) * cols]
-                compose_sheet(row_frames, 1, cols, cell_size).save(out_dir / f"{direction}-strip.png")
+                compose_sheet(row_frames, 1, cols, output_cell_width, output_cell_height).save(out_dir / f"{direction}-strip.png")
                 save_transparent_gif(row_frames, out_dir / f"{direction}.gif", args.duration)
             metadata["directions"] = directions
         else:
@@ -818,7 +831,12 @@ def cmd_process(args: argparse.Namespace) -> None:
 
         metadata["rows"] = rows
         metadata["cols"] = cols
-        metadata["cell_size"] = cell_size
+        metadata["cell_size"] = args.cell_size
+        metadata["cell_size_source"] = "explicit" if explicit_cell_size else "inferred_from_input"
+        metadata["source_cell_width"] = source_cell_width
+        metadata["source_cell_height"] = source_cell_height
+        metadata["output_cell_width"] = output_cell_width
+        metadata["output_cell_height"] = output_cell_height
         metadata["fit_scale"] = args.fit_scale
         metadata["trim_border"] = args.trim_border
         metadata["edge_clean_depth"] = args.edge_clean_depth
