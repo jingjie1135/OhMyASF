@@ -1,17 +1,21 @@
-# Agent Sprite Forge
+# OhMyASF
 
 语言：[English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 <p align="center">
-  <img src="./src/banner.png" alt="Agent Sprite Forge banner" width="900" />
+  <img src="./src/banner.png" alt="OhMyASF banner" width="900" />
 </p>
 
 <p align="center">
-  <strong>面向通用 agent 的 2D 游戏资产技能：通过 OpenAI-compatible 生图端点生成可用角色精灵、分层地图和引擎原型素材。</strong>
+  <strong>面向任何支持 Skills 的 AI agent 的 2D 游戏资产工作流：通过 OpenAI-compatible 生图端点生成可用角色精灵、分层地图和引擎原型素材。</strong>
 </p>
 
 <p align="center">
   用自然语言描述需求，agent 负责规划资产流程，通过 new-api / One-API / LiteLLM 风格的 OpenAI-compatible 图像接口产出原始视觉，再用本地处理器去背、切格、对齐、验证，并导出给 Godot、Unity 或普通 2D 游戏项目使用。
+</p>
+
+<p align="center">
+  OhMyASF 基于 Agent Sprite Forge 演进而来，但已经从原本偏 Codex-first 的资产生成流程，改造成可移植的 Skills、本地处理器和外部 OpenAI-compatible 生图适配器组合。只要你的 AI 工具能加载 skills，就可以把这套工作流接入 OpenCode、Claude Code、Gemini CLI、Codex 或其他 agent runtime。
 </p>
 
 <p align="center">
@@ -22,9 +26,18 @@
   <a href="#star-history">Star History</a>
 </p>
 
-## 有什么不同
+## OhMyASF 与原 Agent Sprite Forge 的不同
 
-Agent Sprite Forge 不是一组 prompt 模板。它是一套 agent-compatible 的 2D 游戏资产工作流：agent 先判断需要什么资产，OpenAI-compatible 生图 provider 负责创作原始视觉，本地脚本只做可重复的清理、切割、对齐、验证和导出。
+OhMyASF 不是一组 prompt 模板，也不是只绑定某个平台内置生图能力的 demo。它保留了 Agent Sprite Forge 的核心目标——让 agent 生成游戏可用资产——但把关键路径改成更通用、更稳定、更容易配置的工作流：agent 先判断需要什么资产，OpenAI-compatible 生图 provider 负责创作原始视觉，本地脚本只做可重复的清理、切割、对齐、验证和导出。
+
+相对原项目，OhMyASF 重点做了这些改造：
+
+- **从 Codex-first 到 Skills-first**：skills 文件可以复制到 OpenCode、Claude Code、Gemini CLI、Codex 或其他支持 Skills 的 AI 工具中使用，不再要求用户必须在单一 agent runtime 内工作。
+- **外部 OpenAI-compatible 生图 provider**：通过 new-api / One-API / LiteLLM 风格的 `/v1/images/generations` 端点接入，不依赖平台内建 `image_gen`。
+- **更简单的用户入口**：新增 `ohmyasf setup` 和 `ohmyasf generate --run-dir ...`，用户只需输入 API 地址和 key；旧的 `agent-sprite-forge-imagegen` 仍保留给高级调试和兼容场景。
+- **确定性的分辨率策略**：默认 2K，图标、头像等简单资产走 1K，大地图、背景、高密度 `5x5` / `6x6` sheet 走 4K，减少 agent 每次临场猜模型的成本。
+- **更安全的 sprite 后处理兜底**：agent 仍应按资源类型主动传 `--cell-size`；如果漏传，处理器会保留原图每格分辨率，不再自动压缩到旧的 96 / 128 小格子。
+- **更明确的引擎交付目标**：除 sprite 和 map 图像外，文档和 skills 更强调 Godot editable map、分层地图、prop pack、collision / zones、Unity / Godot prototype wiring 等可落地输出。
 
 <table>
   <tr>
@@ -39,7 +52,7 @@ Agent Sprite Forge 不是一组 prompt 模板。它是一套 agent-compatible �
 
 ### Engine-Ready Prototypes
 
-这些案例使用 agentic `agent-sprite-forge` 工作流组装，重点是完整闭环：生成资产、结构化场景数据，以及可玩的 prototype wiring。
+这些案例使用 agentic OhMyASF 工作流组装，重点是完整闭环：生成资产、结构化场景数据，以及可玩的 prototype wiring。
 
 <table>
   <tr>
@@ -198,7 +211,7 @@ cp -R ./skills/* ~/.codex/skills/
 
 ### 1. 配置 OpenAI-Compatible 生图 provider
 
-Agent Sprite Forge 使用单一 OpenAI-compatible 端点生成 raw image，可接入 new-api、One-API、LiteLLM 风格网关，或任何实现 `/v1/images/generations` 的 provider。
+OhMyASF 使用单一 OpenAI-compatible 端点生成 raw image，可接入 new-api、One-API、LiteLLM 风格网关，或任何实现 `/v1/images/generations` 的 provider。
 
 安装后运行一次 setup，输入网关地址和 API key。CLI 会把默认配置写入用户目录下的 `.agent-sprite-forge/imagegen.json`，并保存 API key；如果你更希望用环境变量管理密钥，也可以用固定变量名 `OHMYASF_IMAGEGEN_API_KEY` 覆盖配置中的 key。
 

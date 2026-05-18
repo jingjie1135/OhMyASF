@@ -1,17 +1,21 @@
-# Agent Sprite Forge
+# OhMyASF
 
 Languages: [English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简体中文](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md)
 
 <p align="center">
-  <img src="./src/banner.png" alt="Agent Sprite Forge banner" width="900" />
+  <img src="./src/banner.png" alt="OhMyASF banner" width="900" />
 </p>
 
 <p align="center">
-  <strong>Agent-compatible skills for game-ready 2D sprites, layered maps, and engine-ready prototypes.</strong>
+  <strong>2D game asset workflows for any AI agent that can load Skills: game-ready sprites, layered maps, and engine-ready prototypes through OpenAI-compatible image generation.</strong>
 </p>
 
 <p align="center">
-  Ask in natural language. Your agent plans the asset pipeline, renders through an OpenAI-compatible image generation endpoint such as new-api, then local processors clean, split, validate, and export assets for Godot, Unity, or raw 2D game workflows.
+  Ask in natural language. Your agent plans the asset pipeline, renders through an OpenAI-compatible image generation endpoint such as new-api, One-API, or LiteLLM, then local processors clean, split, validate, and export assets for Godot, Unity, or raw 2D game workflows.
+</p>
+
+<p align="center">
+  OhMyASF is based on Agent Sprite Forge, but it turns the original Codex-first asset generation flow into portable Skills, deterministic local processors, and an external OpenAI-compatible image adapter. If your AI tool can load skills, you can use the workflow from OpenCode, Claude Code, Gemini CLI, Codex, or another agent runtime.
 </p>
 
 <p align="center">
@@ -22,9 +26,18 @@ Languages: [English](./README.en.md) | [繁體中文](./README.zh-TW.md) | [简�
   <a href="#star-history">Star History</a>
 </p>
 
-## What Makes It Different
+## How OhMyASF Differs From Agent Sprite Forge
 
-Agent Sprite Forge is not just a folder of prompts. It is an agent-compatible 2D game asset workflow where the agent decides the plan, an OpenAI-compatible image provider creates the raw visuals, and deterministic scripts turn those visuals into reusable game assets.
+OhMyASF is not just a folder of prompts, and it is not a demo tied to one platform's built-in image tool. It keeps Agent Sprite Forge's core goal—letting an agent produce usable game assets—but moves the critical path to a more portable and stable workflow: the agent decides the asset plan, an OpenAI-compatible image provider creates the raw visuals, and deterministic local scripts turn those visuals into reusable game assets.
+
+Compared with the original project, OhMyASF focuses on these changes:
+
+- **From Codex-first to Skills-first**: copy the skills into OpenCode, Claude Code, Gemini CLI, Codex, or any other AI tool that can load Skills instead of requiring one specific agent runtime.
+- **External OpenAI-compatible image providers**: route raw image generation through new-api / One-API / LiteLLM-style `/v1/images/generations` endpoints instead of depending on a platform-managed `image_gen` tool.
+- **Simpler user entry point**: use `ohmyasf setup` and `ohmyasf generate --run-dir ...`; users only provide an API URL and key. The older `agent-sprite-forge-imagegen` command stays available for advanced debugging and compatibility.
+- **Deterministic 1K / 2K / 4K routing**: standard assets default to 2K, simple icons and portraits use 1K, and large maps, backgrounds, or dense `5x5` / `6x6` sheets use 4K.
+- **Safer sprite post-processing fallback**: agents should still choose `--cell-size` deliberately, but if they forget it, the processor preserves the source per-cell resolution instead of shrinking frames to the old 96 / 128 defaults.
+- **Clearer engine handoff target**: the skills and docs now emphasize Godot editable maps, layered maps, prop packs, collision / zones, and Unity / Godot prototype wiring—not just individual generated images.
 
 <table>
   <tr>
@@ -51,7 +64,7 @@ Agent Sprite Forge is not just a folder of prompts. It is an agent-compatible 2D
 
 ### Engine-Ready Prototypes
 
-These examples were assembled with agentic `agent-sprite-forge` workflows. They are meant to show the full loop: generated assets, structured scene data, and playable prototype wiring.
+These examples were assembled with agentic OhMyASF workflows. They are meant to show the full loop: generated assets, structured scene data, and playable prototype wiring.
 
 <table>
   <tr>
@@ -395,7 +408,7 @@ The first adapter implementation is text-to-image only. When a visual reference 
 
 1. The user asks an agent for a sprite, prop pack, map, or engine-ready prototype.
 2. The agent chooses the asset type, action, bundle shape, sheet layout, frame count, style, and alignment strategy.
-3. The agent writes `imagegen-request.json` and runs `agent-sprite-forge-imagegen generate` against an OpenAI-compatible `/v1/images/generations` endpoint.
+3. The agent writes `imagegen-request.json` and runs `ohmyasf generate --run-dir ...` against an OpenAI-compatible `/v1/images/generations` endpoint.
 4. The adapter writes raw PNGs plus `imagegen-manifest.json`; existing local scripts then run deterministic post-processing: chroma-key cleanup, despill, frame extraction, alignment, prop-pack slicing, GIF/PNG export, and validation metadata.
 5. For maps and prototypes, the agent can also assemble placement metadata, collision, trigger zones, Godot scenes, or Unity project wiring.
 
@@ -442,7 +455,7 @@ Start a new agent session after installation so the skills are loaded cleanly.
 
 ## OpenAI-Compatible Image Provider
 
-Agent Sprite Forge uses one OpenAI-compatible endpoint for raw image generation. This works with new-api, One-API, LiteLLM-style gateways, or any provider that implements `/v1/images/generations`.
+OhMyASF uses one OpenAI-compatible endpoint for raw image generation. This works with new-api, One-API, LiteLLM-style gateways, or any provider that implements `/v1/images/generations`.
 
 Run setup once after installation and provide only the gateway URL and API key. The CLI writes the default config to `.agent-sprite-forge/imagegen.json` under your user home and stores the API key there. If you prefer environment-managed secrets, the stable `OHMYASF_IMAGEGEN_API_KEY` variable overrides the stored key.
 
